@@ -1,0 +1,14 @@
+/* 
+  Localizable.strings
+  nRFThingy52
+
+  Created by Qiang Ma on 7/25/21.
+  
+*/
+
+"ON" = "PÅ";
+"OFF" = "AV";
+"PRESSED" = "NEDTRYKKET";
+"RELEASED" = "INAKTIV";
+"Reading..." = "Leser...";
+"Unknown Device" = "Ukjent Enhet";

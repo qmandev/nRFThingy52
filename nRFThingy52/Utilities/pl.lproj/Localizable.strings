@@ -1,0 +1,14 @@
+/* 
+  Localizable.strings
+  nRFThingy52
+
+  Created by Qiang Ma on 7/25/21.
+  
+*/
+
+"ON" = "WŁĄCZONE";
+"OFF" = "WYŁĄCZONE";
+"PRESSED" = "WCIŚNIĘTY";
+"RELEASED" = "ZWOLNIONY";
+"Reading..." = "Pobieranie...";
+"Unknown Device" = "Nieznane urządzenie";

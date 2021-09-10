@@ -1,0 +1,14 @@
+/* 
+  Localizable.strings
+  nRFThingy52
+
+  Created by Qiang Ma on 7/25/21.
+  
+*/
+
+"ON" = "PORNIT";
+"OFF" = "OPRIT";
+"PRESSED" = "APASAT";
+"RELEASED" = "NEAPĂSAT";
+"Reading..." = "Se actualizează starea...";
+"Unknown Device" = "Dispozitiv necunoscut";
