@@ -10,24 +10,52 @@ import XCTest
 
 class nRFThingy52Tests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    // MARK: - UIColor hex parsing
+
+    func testHexInit6Digit() throws {
+        let color = UIColor(hexString: "#FF0000")
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        XCTAssertTrue(color.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+        XCTAssertEqual(red, 1.0, accuracy: 0.001)
+        XCTAssertEqual(green, 0.0, accuracy: 0.001)
+        XCTAssertEqual(blue, 0.0, accuracy: 0.001)
+        XCTAssertEqual(alpha, 1.0, accuracy: 0.001)
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    func testHexInit3Digit() throws {
+        let color = UIColor(hexString: "#0F0")
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        XCTAssertTrue(color.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+        XCTAssertEqual(red, 0.0, accuracy: 0.001)
+        XCTAssertEqual(green, 1.0, accuracy: 0.001)
+        XCTAssertEqual(blue, 0.0, accuracy: 0.001)
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testHexInitAlpha() throws {
+        let color = UIColor(hexString: "336699", alpha: 0.5)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        XCTAssertTrue(color.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+        XCTAssertEqual(alpha, 0.5, accuracy: 0.01)
     }
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    func testHexStringRoundTrip() throws {
+        XCTAssertEqual(UIColor(hexString: "#336699").hexString, "#336699")
+        XCTAssertEqual(UIColor(red: 1, green: 1, blue: 1, alpha: 1).hexString, "#FFFFFF")
+        XCTAssertEqual(UIColor(red: 0, green: 0, blue: 0, alpha: 1).hexString, "#000000")
+    }
+
+    func testDynamicColorResolvesPerStyle() throws {
+        let dynamic = UIColor.dynamicColor(light: .white, dark: .black)
+        let light = dynamic.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+        let dark = dynamic.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+        XCTAssertNotEqual(light, dark)
+    }
+
+    // MARK: - String localization
+
+    func testLocalizedReturnsKeyForUnknownString() throws {
+        // NSLocalizedString falls back to the key when no translation exists.
+        XCTAssertEqual("THIS_KEY_DOES_NOT_EXIST".localized, "THIS_KEY_DOES_NOT_EXIST")
     }
 
 }

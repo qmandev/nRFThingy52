@@ -16,7 +16,7 @@ class ScannerTableViewCell: UITableViewCell {
 
     // MARK: - Properties
     
-    public static let reuseidentifer = "thingyPeripheralCell"
+    public static let reuseIdentifier = "thingyPeripheralCell"
     
     private var lastUpdateTimestamp = Date()
     

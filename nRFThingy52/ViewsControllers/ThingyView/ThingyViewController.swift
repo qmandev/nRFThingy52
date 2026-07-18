@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreBluetooth
 
 class ThingyViewController: UITableViewController, ThingyDelegate {
     
@@ -21,9 +20,8 @@ class ThingyViewController: UITableViewController, ThingyDelegate {
     
     // MARK: - Properties
     
-    private var hapticGenerator : NSObject?
+    private var hapticGenerator : UIImpactFeedbackGenerator?
     private var thingyPeripheral : ThingyPeripheral!
-    private var centralManager : CBCentralManager!
     
     
     // MARK: - Public API
@@ -55,18 +53,17 @@ class ThingyViewController: UITableViewController, ThingyDelegate {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        thingyPeripheral.disConnect()
+        thingyPeripheral.disconnect()
         super.viewWillDisappear(animated)
     }
     
     
     // MARK: - Implementations
     
-    /// This will run on iOS 10 or above
-    /// and will generate a tap feedback when the button is tapped on the Dev kit.
+    /// Generates a tap feedback when the button is tapped on the Dev kit.
     private func prepareHaptics() {
         hapticGenerator = UIImpactFeedbackGenerator(style: .heavy)
-        (hapticGenerator as? UIImpactFeedbackGenerator)?.prepare()
+        hapticGenerator?.prepare()
     }
     
     private func handleSwitchValueChange(newValue isOn: Bool) {
@@ -81,7 +78,7 @@ class ThingyViewController: UITableViewController, ThingyDelegate {
     
     /// Generates a tap feedback
     func buttonTapHapticFeedback() {
-        (hapticGenerator as? UIImpactFeedbackGenerator)?.impactOccurred()
+        hapticGenerator?.impactOccurred()
     }
     
 }
@@ -106,7 +103,7 @@ extension ThingyViewController {
         
         // If Not supported device, not support both led/button ,then disconnect the peripheral
         if !buttonSupported && !ledSupported {
-            thingyPeripheral.disConnect()
+            thingyPeripheral.disconnect()
         }
     }
     

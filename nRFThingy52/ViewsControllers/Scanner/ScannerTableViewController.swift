@@ -7,8 +7,11 @@
 
 import UIKit
 import CoreBluetooth
+import os
 
 class ScannerTableViewController: UITableViewController, CBCentralManagerDelegate {
+
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "nRFThingy52", category: "Scanner")
     
     // MARK: - IBActions, IBOutlets
     @IBOutlet weak var activityIndicator : UIActivityIndicatorView!
@@ -142,7 +145,7 @@ extension ScannerTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ScannerTableViewCell.reuseidentifer,
+        let cell = tableView.dequeueReusableCell(withIdentifier: ScannerTableViewCell.reuseIdentifier,
                                                  for: indexPath) as! ScannerTableViewCell
         
         cell.setupView(withPeripheral: discoveredPeripherals[indexPath.row])
@@ -151,7 +154,7 @@ extension ScannerTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "Nearby Devices"
+        return "Nearby Devices".localized
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -174,7 +177,7 @@ extension ScannerTableViewController {
         selectedPeripheral?.centralManagerDidUpdateState(central)
 
         if central.state != .poweredOn {
-            print("Central is not powered on.")
+            logger.debug("Central is not powered on.")
         } else if view.window != nil {
             // Only scan while the scanner is on screen; viewDidAppear
             // restarts the scan when the user comes back.

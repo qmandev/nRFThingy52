@@ -1,7 +1,7 @@
 # nRFThingy52 — BLE Code Analysis & Status
 
 *Analysis date: 2026-07-18. Reflects the current working tree (uncommitted changes included), on branch `main`.*
-*Update 2026-07-18: the critical, high, and medium issues below have been fixed — see section 8.*
+*Update 2026-07-18: all issues below — critical through low priority — have been fixed; see section 8.*
 
 ## 1. Overview
 
@@ -151,12 +151,13 @@ User-facing strings go through `String.localized` (`StringExtension.swift`) with
 2. Move `disConnect()` out of `viewDidAppear` into `viewWillDisappear`. ✅ fixed
 3. Replace the descriptor-write callback with the characteristic-write overload. ✅ fixed
 4. Make `ThingyDelegate` class-bound with a `weak` delegate. ✅ fixed
-5. Reorder RSSI buckets ✅ fixed; localize `"Nearby Devices"` — still open.
-6. Delete dead code; adopt `os.Logger` — still open. Deprecated `scanHexInt32` ✅ replaced.
+5. Reorder RSSI buckets ✅ fixed; localize `"Nearby Devices"` ✅ fixed.
+6. Delete dead code ✅; replace deprecated `scanHexInt32` ✅; adopt `os.Logger` ✅.
 
 ## 8. Fixes Applied (2026-07-18)
 
-All critical, high, and medium issues from section 4 were fixed and committed to `main`.
+All issues from section 4 — critical, high, medium, and low — have been fixed. The critical
+through medium fixes were committed to `main`; the low-priority pass is in the working tree.
 
 ### Critical
 
@@ -207,15 +208,42 @@ All critical, high, and medium issues from section 4 were fixed and committed to
 Also removed as part of the review: a leftover debug `print` of `centralManager.state` in the
 scanner's `viewDidAppear`.
 
-### Still open (low priority)
+### Low priority (fixed in a follow-up pass, 2026-07-18)
 
-- Dead code in `ThingyPeripheral` (unused base-UUID helper trio, commented-out Blinky UUIDs) and
-  the unused `ThingyViewController.centralManager` property.
-- Naming cleanup (`disConnect`, `reuseidentifer`, `writeLEDCharcateristic`).
-- Migrate `print` logging to `os.Logger`.
-- Localize the `"Nearby Devices"` section header.
-- Store `hapticGenerator` as `UIImpactFeedbackGenerator` directly.
-- No test coverage.
+8. **Dead code removed** (`ThingyPeripheral.swift`, `ThingyViewController.swift`)
+   Deleted the unused base-UUID format string and helper trio (`getUIServiceUUID`,
+   `getLEDCharacteristicUUID`, `getButtonCharacteristicUUID`, `getUUIDString`), the
+   commented-out Nordic Blinky UUIDs, and the unused `ThingyViewController.centralManager`
+   property along with its no-longer-needed `CoreBluetooth` import.
+
+9. **Naming normalized**
+   `disConnect()` → `disconnect()` (definition and both call sites),
+   `writeLEDCharcateristic` → `writeLEDCharacteristic`, and
+   `ScannerTableViewCell.reuseidentifer` → `reuseIdentifier` (including the dequeue site).
+
+10. **Logging migrated to `os.Logger`** (`ThingyPeripheral.swift`, `ScannerTableViewController.swift`)
+    All `print` calls replaced with `logger.debug(...)` — a static logger in `ThingyPeripheral`
+    (category `ThingyPeripheral`) and an instance logger in the scanner (category `Scanner`),
+    both under the app's bundle-identifier subsystem. Debug-level messages stay out of release
+    console output and are filterable in Console.app. The `CBManagerState` interpolation uses
+    `.rawValue` since the enum is not directly log-interpolatable.
+
+11. **Localization gaps closed**
+    The scanner's `"Nearby Devices"` section header now goes through `.localized`, and both
+    `"Nearby Devices"` and `"Scanning..."` (used by `ThingyViewController` but previously missing
+    from every strings file) were added to all 16 `Localizable.strings` files with English
+    placeholder values, ready for translation.
+
+12. **Haptics simplified** (`ThingyViewController.swift`)
+    `hapticGenerator` is now stored as `UIImpactFeedbackGenerator?` directly instead of
+    `NSObject?` with downcasts — the iOS-10 availability workaround was obsolete given the
+    iOS 14.5 deployment target.
+
+13. **First unit tests added** (`nRFThingy52Tests.swift`)
+    Replaced the Xcode template stubs with six tests covering `UIColor(hexString:)` parsing
+    (6-digit, 3-digit, alpha), `hexString` round-trip, `dynamicColor(light:dark:)` trait
+    resolution, and the `String.localized` key fallback. `ThingyPeripheral`'s BLE logic remains
+    untested (would require `CoreBluetooth` mocks); the UI test target is untouched.
 
 *Note: fixes were authored on a machine without full Xcode, so they were code-reviewed but not
 compile-verified at the time of writing — verify with a build and an on-device test against a
