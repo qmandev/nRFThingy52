@@ -3,3 +3,6 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# Screenshots and other images dropped at repo root
+/*.png

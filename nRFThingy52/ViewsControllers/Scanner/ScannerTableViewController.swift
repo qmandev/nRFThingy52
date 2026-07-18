@@ -32,6 +32,12 @@ class ScannerTableViewController: UITableViewController, CBCentralManagerDelegat
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Keep the scanning indicator free-floating on the nav bar instead of
+        // inside the Liquid Glass capsule iOS 26 draws behind bar button items.
+        if #available(iOS 26.0, *) {
+            navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+        }
+
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
