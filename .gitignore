@@ -1,0 +1,5 @@
+# Xcode per-user state (breakpoints, UI state, schemes)
+xcuserdata/
+
+# macOS
+.DS_Store

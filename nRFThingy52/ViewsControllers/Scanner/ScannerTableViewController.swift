@@ -19,13 +19,17 @@ class ScannerTableViewController: UITableViewController, CBCentralManagerDelegat
     
     private var centralManager : CBCentralManager!
     private var discoveredPeripherals = [ThingyPeripheral]()
-    
+
+    /// The peripheral the user selected. The scanner stays the central manager's
+    /// delegate for the whole app lifetime and forwards connection events here.
+    private var selectedPeripheral : ThingyPeripheral?
+
     // MARK: - ViewController Lifecycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        centralManager = CBCentralManager()
+
+        centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
     
@@ -40,7 +44,7 @@ class ScannerTableViewController: UITableViewController, CBCentralManagerDelegat
         super.viewDidAppear(animated)
         
         navigationController?.navigationBar.barTintColor = UIColor.nordicBlue
-        centralManager.delegate = self
+
         if centralManager.state == .poweredOn {
             activityIndicator.startAnimating()
             centralManager.scanForPeripherals(withServices: [ThingyPeripheral.nordicThingyServiceUUID],
@@ -155,7 +159,8 @@ extension ScannerTableViewController {
         activityIndicator.stopAnimating()
         
         tableView.deselectRow(at: indexPath, animated: true)
-        performSegue(withIdentifier: "PushThingyViewController", sender: discoveredPeripherals[indexPath.row])
+        selectedPeripheral = discoveredPeripherals[indexPath.row]
+        performSegue(withIdentifier: "PushThingyView", sender: selectedPeripheral)
     }
     
 }
@@ -166,12 +171,27 @@ extension ScannerTableViewController {
 extension ScannerTableViewController {
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        selectedPeripheral?.centralManagerDidUpdateState(central)
+
         if central.state != .poweredOn {
             print("Central is not powered on.")
-        } else {
+        } else if view.window != nil {
+            // Only scan while the scanner is on screen; viewDidAppear
+            // restarts the scan when the user comes back.
             activityIndicator.startAnimating()
             centralManager.scanForPeripherals(withServices: [ThingyPeripheral.nordicThingyServiceUUID],
                                               options: [CBCentralManagerScanOptionAllowDuplicatesKey : true])
+        }
+    }
+
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        selectedPeripheral?.centralManager(central, didConnect: peripheral)
+    }
+
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        selectedPeripheral?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
+        if selectedPeripheral?.isEqual(peripheral) == true {
+            selectedPeripheral = nil
         }
     }
     

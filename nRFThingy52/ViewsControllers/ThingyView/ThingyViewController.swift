@@ -54,9 +54,9 @@ class ThingyViewController: UITableViewController, ThingyDelegate {
         thingyPeripheral.connect()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         thingyPeripheral.disConnect()
-        super.viewDidAppear(animated)
+        super.viewWillDisappear(animated)
     }
     
     

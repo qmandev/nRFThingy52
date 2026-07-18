@@ -8,7 +8,7 @@
 import UIKit
 import CoreBluetooth
 
-protocol ThingyDelegate {
+protocol ThingyDelegate: AnyObject {
     func thingyDidConnect(ledSupported: Bool, buttonSupported: Bool)
     func thingyDidDisconnect()
     func buttonStateChanged(isPressed: Bool)
@@ -17,7 +17,7 @@ protocol ThingyDelegate {
 
 class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate {
     
-    // MARK: - Blinky services and charcteristics Identifiers
+    // MARK: - Thingy services and charcteristics Identifiers
     
     // TODO: will need to find the correct ServiceUUID for Thingy52
     // public static let nordicThingyServiceUUID  = CBUUID.init(string: "00001523-1212-EFDE-1523-785FEABCD123")
@@ -57,7 +57,7 @@ class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate
     public private(set) var advertisedName    : String?
     public private(set) var RSSI              : NSNumber
     
-    public var delegate: ThingyDelegate?
+    public weak var delegate: ThingyDelegate?
     
     
     // MARK: - Computed Properties
@@ -89,8 +89,9 @@ class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate
     }
     
     /// Connects to the Thingy 52 device.
+    /// The scanner remains the central manager's delegate and forwards
+    /// connection events to this object.
     public func connect() {
-        centralManager.delegate = self
         print("Connecting to Thingy 52 device ...")
         centralManager.connect(basePeripheral, options: nil)
     }
@@ -341,8 +342,10 @@ extension ThingyPeripheral {
         }
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         // LED value has been written, let's read it to confirm
-        readLEDValue()
+        if characteristic.uuid == ThingyPeripheral.ledCharacteristicUUID {
+            readLEDValue()
+        }
     }
 }

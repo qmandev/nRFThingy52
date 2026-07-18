@@ -37,8 +37,7 @@ extension UIColor {
     
     convenience init(hexString: String, alpha: Double = 1.0) {
         let hex = hexString.trimmingCharacters(in: NSCharacterSet.alphanumerics.inverted)
-        var intVal = UInt32()
-        Scanner(string: hex).scanHexInt32(&intVal)
+        let intVal = UInt32(hex, radix: 16) ?? 0
         let r, g, b: UInt32
         switch hex.count {
         case 3: // RGB (12-bit)
@@ -69,12 +68,11 @@ extension UIColor {
     }
     
     var hexString: String {
-        let components = self.cgColor.components!
-        
-        let red = Float(components[0])
-        let green = Float(components[1])
-        let blue = Float(components[2])
-        return String(format: "#%02lX%02lX%02lX", lroundf(red * 255), lroundf(green * 255), lroundf(blue * 255))
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        guard getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return "#000000"
+        }
+        return String(format: "#%02lX%02lX%02lX", lroundf(Float(red) * 255), lroundf(Float(green) * 255), lroundf(Float(blue) * 255))
     }
     
 }

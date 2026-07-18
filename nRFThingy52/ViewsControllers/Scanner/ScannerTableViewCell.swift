@@ -25,14 +25,14 @@ class ScannerTableViewCell: UITableViewCell {
     public func setupView(withPeripheral aPeripheral: ThingyPeripheral) {
         peripheralName.text = aPeripheral.advertisedName
         
-        if aPeripheral.RSSI.decimalValue < -60 {
-            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_2")
-        } else if aPeripheral.RSSI.decimalValue < -50 {
-            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_3")
-        } else if aPeripheral.RSSI.decimalValue < -30 {
-            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_4")
-        } else {
+        if aPeripheral.RSSI.decimalValue < -80 {
             peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_1")
+        } else if aPeripheral.RSSI.decimalValue < -60 {
+            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_2")
+        } else if aPeripheral.RSSI.decimalValue < -40 {
+            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_3")
+        } else {
+            peripheralRSSIIcon.image = #imageLiteral(resourceName: "rssi_4")
         }
     }
     
