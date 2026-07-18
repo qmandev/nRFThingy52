@@ -1,6 +1,7 @@
 # nRFThingy52 — BLE Code Analysis & Status
 
 *Analysis date: 2026-07-18. Reflects the current working tree (uncommitted changes included), on branch `main`.*
+*Update 2026-07-18: the critical, high, and medium issues below have been fixed — see section 8.*
 
 ## 1. Overview
 
@@ -146,9 +147,76 @@ User-facing strings go through `String.localized` (`StringExtension.swift`) with
 
 ## 7. Suggested Priority Order
 
-1. Fix the segue identifier mismatch (crash on device selection).
-2. Move `disConnect()` out of `viewDidAppear` into `viewWillDisappear`.
-3. Replace the descriptor-write callback with the characteristic-write overload.
-4. Make `ThingyDelegate` class-bound with a `weak` delegate.
-5. Reorder RSSI buckets; localize `"Nearby Devices"`.
-6. Delete dead code; replace deprecated `scanHexInt32`; adopt `os.Logger`.
+1. Fix the segue identifier mismatch (crash on device selection). ✅ fixed
+2. Move `disConnect()` out of `viewDidAppear` into `viewWillDisappear`. ✅ fixed
+3. Replace the descriptor-write callback with the characteristic-write overload. ✅ fixed
+4. Make `ThingyDelegate` class-bound with a `weak` delegate. ✅ fixed
+5. Reorder RSSI buckets ✅ fixed; localize `"Nearby Devices"` — still open.
+6. Delete dead code; adopt `os.Logger` — still open. Deprecated `scanHexInt32` ✅ replaced.
+
+## 8. Fixes Applied (2026-07-18)
+
+All critical, high, and medium issues from section 4 were fixed and committed to `main`.
+
+### Critical
+
+1. **Segue crash on device selection** (`ScannerTableViewController.swift`)
+   `didSelectRowAt` now calls `performSegue(withIdentifier: "PushThingyView", ...)`, matching the
+   storyboard segue and the identifier checked in `prepare(for:sender:)` / `shouldPerformSegue`.
+   Selecting a device navigates to the Thingy screen and passes the peripheral correctly.
+
+2. **Immediate disconnect after connect** (`ThingyViewController.swift`)
+   The `thingyPeripheral.disConnect()` call moved from `viewDidAppear` to a new
+   `viewWillDisappear` override. The connection now lives for the duration of the detail screen
+   and tears down when the user navigates away. A cancelled back-swipe reconnects via the
+   existing `viewWillAppear` guard on `isConnected`.
+
+### High
+
+3. **Dead write-confirmation callback** (`ThingyPeripheral.swift`)
+   `peripheral(_:didWriteValueFor:error:)` now uses the **characteristic** overload (the previous
+   code implemented the descriptor variant, which never fires for characteristic writes), guarded
+   to the LED characteristic UUID. LED writes with response are now confirmed by a follow-up read.
+
+4. **Retain cycle between view controller and peripheral** (`ThingyPeripheral.swift`)
+   `ThingyDelegate` is now class-bound (`: AnyObject`) and `delegate` is declared `weak`. The
+   view controller strongly owns the peripheral; the back-reference no longer pins the view
+   controller in memory.
+
+### Medium
+
+5. **Central-manager delegate ownership consolidated** (`ScannerTableViewController.swift`,
+   `ThingyPeripheral.swift`)
+   The scanner is now the sole, permanent `CBCentralManager` delegate (assigned at creation via
+   `CBCentralManager(delegate:queue:)` in `viewDidLoad`). `ThingyPeripheral.connect()` no longer
+   reassigns the delegate. The scanner tracks the user-selected peripheral in a new
+   `selectedPeripheral` property and forwards `centralManagerDidUpdateState`, `didConnect`, and
+   `didDisconnectPeripheral` events to it (clearing it after disconnect). The scanner also only
+   restarts scanning from a state-change callback when its view is on screen (`view.window != nil`),
+   so Bluetooth power cycles during the detail screen no longer trigger a hidden background scan.
+
+6. **RSSI icon buckets reordered** (`ScannerTableViewCell.swift`)
+   Signal strength now maps monotonically to icons: `< -80` dBm → `rssi_1` (weakest),
+   `-80…-60` → `rssi_2`, `-60…-40` → `rssi_3`, stronger → `rssi_4` (strongest).
+
+7. **Deprecated / unsafe color helpers** (`UIColorExtension.swift`)
+   `Scanner.scanHexInt32` (deprecated since iOS 13) replaced with `UInt32(hex, radix: 16)`.
+   `hexString` now uses `getRed(_:green:blue:alpha:)` with a guard (returning `"#000000"` on
+   failure) instead of force-unwrapping `cgColor.components`, so non-RGB colors no longer crash.
+
+Also removed as part of the review: a leftover debug `print` of `centralManager.state` in the
+scanner's `viewDidAppear`.
+
+### Still open (low priority)
+
+- Dead code in `ThingyPeripheral` (unused base-UUID helper trio, commented-out Blinky UUIDs) and
+  the unused `ThingyViewController.centralManager` property.
+- Naming cleanup (`disConnect`, `reuseidentifer`, `writeLEDCharcateristic`).
+- Migrate `print` logging to `os.Logger`.
+- Localize the `"Nearby Devices"` section header.
+- Store `hapticGenerator` as `UIImpactFeedbackGenerator` directly.
+- No test coverage.
+
+*Note: fixes were authored on a machine without full Xcode, so they were code-reviewed but not
+compile-verified at the time of writing — verify with a build and an on-device test against a
+physical Thingy:52.*
