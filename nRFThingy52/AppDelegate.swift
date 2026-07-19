@@ -7,7 +7,8 @@
 
 import UIKit
 
-@main
+// @main moved to ThingyApp (SwiftUI lifecycle). This class is retained only
+// until the UIKit deletion pass and is no longer the app entry point.
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 

@@ -57,6 +57,19 @@ final class ThingyConnection {
     }
 }
 
+// MARK: - Hashable (identity-based, for navigationDestination(item:))
+
+extension ThingyConnection: Hashable {
+
+    nonisolated static func == (lhs: ThingyConnection, rhs: ThingyConnection) -> Bool {
+        lhs === rhs
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+    }
+}
+
 // MARK: - ThingyDelegate
 
 extension ThingyConnection: ThingyDelegate {

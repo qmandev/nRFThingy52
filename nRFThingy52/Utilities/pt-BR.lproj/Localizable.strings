@@ -14,3 +14,13 @@
 "Unknown Device" = "Dispositivo desconhecido";
 "Nearby Devices" = "Nearby Devices";
 "Scanning..." = "Scanning...";
+"DISCONNECTED" = "DISCONNECTED";
+"LED" = "LED";
+"Button" = "Button";
+"CAN'T SEE YOUR THINGY?" = "CAN'T SEE YOUR THINGY?";
+"1. Make sure it's switched on." = "1. Make sure it's switched on.";
+"Toggle the switch next to the micro USB port to switch it on." = "Toggle the switch next to the micro USB port to switch it on.";
+"2. Make sure the coin cell battery has power." = "2. Make sure the coin cell battery has power.";
+"If not, connect it to a PC or a charger using a micro USB cable. Coin cell battery is on the bottom side of the dev kit." = "If not, connect it to a PC or a charger using a micro USB cable. Coin cell battery is on the bottom side of the dev kit.";
+"Toggling the switch will cause the LED on the Thingy to turn ON or OFF." = "Toggling the switch will cause the LED on the Thingy to turn ON or OFF.";
+"Pressing and releasing the button on the Thingy will update the state here." = "Pressing and releasing the button on the Thingy will update the state here.";

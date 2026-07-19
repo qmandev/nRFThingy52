@@ -24,6 +24,11 @@
 		EFA240C326ADCA410034D40D /* ThingyPeripheral.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240C226ADCA410034D40D /* ThingyPeripheral.swift */; };
 		EFA240D026ADCA410034D40E /* ScannerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240D126ADCA410034D40E /* ScannerModel.swift */; };
 		EFA240D226ADCA410034D40E /* ThingyConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240D326ADCA410034D40E /* ThingyConnection.swift */; };
+		EFA240E026ADCA410034D40E /* ThingyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E126ADCA410034D40E /* ThingyApp.swift */; };
+		EFA240E226ADCA410034D40E /* ScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E326ADCA410034D40E /* ScannerView.swift */; };
+		EFA240E426ADCA410034D40E /* ThingyRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E526ADCA410034D40E /* ThingyRowView.swift */; };
+		EFA240E626ADCA410034D40E /* ThingyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E726ADCA410034D40E /* ThingyDetailView.swift */; };
+		EFA240E826ADCA410034D40E /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E926ADCA410034D40E /* ColorExtension.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +104,11 @@
 		EFA240C226ADCA410034D40D /* ThingyPeripheral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyPeripheral.swift; sourceTree = "<group>"; };
 		EFA240D126ADCA410034D40E /* ScannerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerModel.swift; sourceTree = "<group>"; };
 		EFA240D326ADCA410034D40E /* ThingyConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyConnection.swift; sourceTree = "<group>"; };
+		EFA240E126ADCA410034D40E /* ThingyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyApp.swift; sourceTree = "<group>"; };
+		EFA240E326ADCA410034D40E /* ScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerView.swift; sourceTree = "<group>"; };
+		EFA240E526ADCA410034D40E /* ThingyRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyRowView.swift; sourceTree = "<group>"; };
+		EFA240E726ADCA410034D40E /* ThingyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyDetailView.swift; sourceTree = "<group>"; };
+		EFA240E926ADCA410034D40E /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +186,8 @@
 		EFA2406526ADBD5C0034D40D /* nRFThingy52 */ = {
 			isa = PBXGroup;
 			children = (
+				EFA240E126ADCA410034D40E /* ThingyApp.swift */,
+				EFA240EA26ADCA410034D40E /* Views */,
 				EFA240C126ADCA070034D40D /* Models */,
 				EFA2406626ADBD5C0034D40D /* AppDelegate.swift */,
 				EFA2406826ADBD5C0034D40D /* SceneDelegate.swift */,
@@ -211,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				EFA2409726ADBE1F0034D40D /* UIColorExtension.swift */,
+				EFA240E926ADCA410034D40E /* ColorExtension.swift */,
 				EFA2409926ADBFF00034D40D /* StringExtension.swift */,
 				EFA240AF26ADC5170034D40D /* Localizable.strings */,
 			);
@@ -225,6 +238,16 @@
 				EFA240D326ADCA410034D40E /* ThingyConnection.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		EFA240EA26ADCA410034D40E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				EFA240E326ADCA410034D40E /* ScannerView.swift */,
+				EFA240E526ADCA410034D40E /* ThingyRowView.swift */,
+				EFA240E726ADCA410034D40E /* ThingyDetailView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -382,6 +405,11 @@
 				EFA2406926ADBD5C0034D40D /* SceneDelegate.swift in Sources */,
 				EFA240C326ADCA410034D40D /* ThingyPeripheral.swift in Sources */,
 				EFA240D026ADCA410034D40E /* ScannerModel.swift in Sources */,
+				EFA240E026ADCA410034D40E /* ThingyApp.swift in Sources */,
+				EFA240E226ADCA410034D40E /* ScannerView.swift in Sources */,
+				EFA240E426ADCA410034D40E /* ThingyRowView.swift in Sources */,
+				EFA240E626ADCA410034D40E /* ThingyDetailView.swift in Sources */,
+				EFA240E826ADCA410034D40E /* ColorExtension.swift in Sources */,
 				EFA240D226ADCA410034D40E /* ThingyConnection.swift in Sources */,
 				EFA2409826ADBE1F0034D40D /* UIColorExtension.swift in Sources */,
 			);
