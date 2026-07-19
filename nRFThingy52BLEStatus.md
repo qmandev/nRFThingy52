@@ -369,3 +369,29 @@ enforces strict concurrency as errors. Changes required:
 pass; simulator smoke test runs the CoreBluetooth startup path without tripping the runtime
 assertions; device (hardy) build succeeds. On-device BLE interaction remains covered by the
 section-9 checklist (unchanged).
+
+## 12. CoreBluetoothMock Integration (2026-07-19)
+
+Nordic's CoreBluetoothMock (SPM, up-to-next-major from 1.0.6 — the project's first and only
+dependency; see `CoreBluetoothMockFeasibility.md` for the analysis) was integrated so the full
+BLE pipeline is testable before the physical Thingy:52 arrives:
+
+- `CoreBluetoothTypeAliases.swift` aliases `CBM*` types to CoreBluetooth names; app code is
+  unchanged except `ScannerModel` now uses `CBCentralManagerFactory.instance(...)` (native on
+  device, mock on simulator) and `ThingyPeripheral` compares peripherals by identifier
+  (`CBMPeripheral` is a protocol, no `==`).
+- `MockThingy52.swift` defines the simulated Thingy:52 (UI service `EF680300`, LED `0301`,
+  Button `0302` with CCCD) plus the `ThingyMocks` facade (seeding, button press/release,
+  power on/off, disconnect, LED state inspection). The app seeds it at launch on the simulator —
+  the simulator app now discovers, connects to, and controls the mock Thingy interactively.
+- `ThingyIntegrationTests.swift` — 7 end-to-end tests mapped to the §9 checklist: discovery
+  (item 1), connect/discover pipeline (2), LED write + read-back (3), button notifications (4),
+  on-demand disconnect (5), Bluetooth power-off (6), and peripheral-initiated disconnect
+  (7 variant). One instructive failure during bring-up: tests that dropped the `ScannerModel`
+  lost disconnect events — correct behavior, since the scanner is the sole central delegate and
+  forwards those events; tests now hold it via `withExtendedLifetime`.
+
+**Result: 28/28 tests pass** (6 utility + 15 model + 7 integration). Simulator and hardy device
+builds both succeed. The §9 checklist now serves as hardware *confirmation* of behavior already
+verified against the mock — items 1–7 have simulator-level coverage; item 8 (back-swipe timing)
+remains UI-level.

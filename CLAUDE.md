@@ -5,15 +5,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 nRFThingy52 is a SwiftUI iOS app that scans for and connects to a Nordic Thingy:52 BLE development
-kit, and lets the user toggle its LED and observe its button state. There are no external
-dependencies (no CocoaPods/Carthage/SPM) — everything is built on `CoreBluetooth`, `SwiftUI`, and
-the `Observation` framework directly.
+kit, and lets the user toggle its LED and observe its button state. Built on `SwiftUI`, the
+`Observation` framework, and CoreBluetooth via Nordic's **CoreBluetoothMock** — the project's
+single dependency (SPM, up-to-next-major from 1.0.6). `CBCentralManagerFactory` returns native
+CoreBluetooth on physical devices and a simulated stack on the simulator, where a mock Thingy:52
+(`MockThingy52.swift`) is seeded at launch so the full scan→connect→LED→button flow works without
+hardware. Do not add further dependencies without discussing first.
 
 - Bundle ID: `com.armstrongmobile.nRFThingy52`
 - Deployment target: iOS 17.0, **Swift 6 language mode** (strict concurrency is enforced —
   data-race safety errors, not warnings). Keep new code warning-free under it.
-- No package manager: do not add a Podfile/Cartfile/Package.swift without discussing it first — the
-  project intentionally has zero third-party dependencies.
+- The CoreBluetooth type names in app code (`CBCentralManager`, `CBPeripheral`, …) are aliases to
+  `CBM*` types, declared in `CoreBluetoothTypeAliases.swift`. **Do not `import CoreBluetooth` in
+  app or test files** — it collides with the aliases; the aliases (plus
+  `import CoreBluetoothMock` where CBM-specific API is needed) cover everything. Note
+  `CBPeripheral` is a *protocol* (`CBMPeripheral`) in this world: compare peripherals by
+  `identifier`, never `==`.
 - The pre-migration UIKit/storyboard implementation is archived on branch `nRFThingy52UIKit`
   (deployment target 14.5). `main` is SwiftUI-only; see `SwiftUIMigrationPlan.md` for how it got here.
 
@@ -93,9 +100,13 @@ palette).
 the English key and mirror it (English placeholder is fine) across all locale files — several
 recent keys are still awaiting real translation.
 
-**Tests** (`nRFThingy52Tests/`): utility tests plus `BLEModelTests.swift` — RSSI bucket
-boundaries, scanner helpers, and a `MockThingy`-driven `ThingyConnection` state-machine suite.
-Extend `MockThingy` rather than trying to mock CoreBluetooth types.
+**Tests** (`nRFThingy52Tests/`): utility tests, `BLEModelTests.swift` (RSSI bucket boundaries,
+scanner helpers, `MockThingy`-driven `ThingyConnection` state machine), and
+`ThingyIntegrationTests.swift` — end-to-end BLE pipeline tests against the simulated Thingy:52
+(simulator-only; they drive `ScannerModel` → `ThingyConnection` → `ThingyPeripheral` through the
+mock). Test controls live in the `ThingyMocks` facade (app target) so the test target never
+imports CoreBluetoothMock directly. When writing integration tests, keep the `ScannerModel`
+alive for the whole test (`withExtendedLifetime`) — disconnect/power events flow through it.
 
 `nRFThingy52BLEStatus.md` tracks the code-review/fix history and the on-device test checklist
 (hardware verification still pending a physical Thingy:52).

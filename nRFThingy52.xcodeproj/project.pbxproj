@@ -23,6 +23,10 @@
 		EFA240E426ADCA410034D40E /* ThingyRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E526ADCA410034D40E /* ThingyRowView.swift */; };
 		EFA240E626ADCA410034D40E /* ThingyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E726ADCA410034D40E /* ThingyDetailView.swift */; };
 		EFA240E826ADCA410034D40E /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240E926ADCA410034D40E /* ColorExtension.swift */; };
+		EFA240FC26ADCA410034D40E /* CoreBluetoothMock in Frameworks */ = {isa = PBXBuildFile; productRef = EFA240FB26ADCA410034D40E /* CoreBluetoothMock */; };
+		EFA240F026ADCA420034D40E /* CoreBluetoothTypeAliases.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240F126ADCA420034D40E /* CoreBluetoothTypeAliases.swift */; };
+		EFA240F226ADCA420034D40E /* MockThingy52.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240F326ADCA420034D40E /* MockThingy52.swift */; };
+		EFA240F426ADCA420034D40E /* ThingyIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240F526ADCA420034D40E /* ThingyIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +86,9 @@
 		EFA240E526ADCA410034D40E /* ThingyRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyRowView.swift; sourceTree = "<group>"; };
 		EFA240E726ADCA410034D40E /* ThingyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyDetailView.swift; sourceTree = "<group>"; };
 		EFA240E926ADCA410034D40E /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		EFA240F126ADCA420034D40E /* CoreBluetoothTypeAliases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBluetoothTypeAliases.swift; sourceTree = "<group>"; };
+		EFA240F326ADCA420034D40E /* MockThingy52.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockThingy52.swift; sourceTree = "<group>"; };
+		EFA240F526ADCA420034D40E /* ThingyIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingyIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFA240FC26ADCA410034D40E /* CoreBluetoothMock in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +141,8 @@
 			isa = PBXGroup;
 			children = (
 				EFA240E126ADCA410034D40E /* ThingyApp.swift */,
+				EFA240F126ADCA420034D40E /* CoreBluetoothTypeAliases.swift */,
+				EFA240F326ADCA420034D40E /* MockThingy52.swift */,
 				EFA240EA26ADCA410034D40E /* Views */,
 				EFA240C126ADCA070034D40D /* Models */,
 				EFA2409626ADBDCC0034D40D /* Utilities */,
@@ -148,6 +158,7 @@
 			children = (
 				EFA2407D26ADBD610034D40D /* nRFThingy52Tests.swift */,
 				EFA240F126ADCA410034D40E /* BLEModelTests.swift */,
+				EFA240F526ADCA420034D40E /* ThingyIntegrationTests.swift */,
 				EFA2407F26ADBD610034D40D /* Info.plist */,
 			);
 			path = nRFThingy52Tests;
@@ -209,6 +220,9 @@
 			dependencies = (
 			);
 			name = nRFThingy52;
+			packageProductDependencies = (
+				EFA240FB26ADCA410034D40E /* CoreBluetoothMock */,
+			);
 			productName = nRFThingy52;
 			productReference = EFA2406326ADBD5C0034D40D /* nRFThingy52.app */;
 			productType = "com.apple.product-type.application";
@@ -295,6 +309,9 @@
 				fr,
 			);
 			mainGroup = EFA2405A26ADBD5C0034D40D;
+			packageReferences = (
+				EFA240FA26ADCA410034D40E /* XCRemoteSwiftPackageReference "IOS-CoreBluetooth-Mock" */,
+			);
 			productRefGroup = EFA2406426ADBD5C0034D40D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -342,6 +359,8 @@
 				EFA240C326ADCA410034D40D /* ThingyPeripheral.swift in Sources */,
 				EFA240D026ADCA410034D40E /* ScannerModel.swift in Sources */,
 				EFA240E026ADCA410034D40E /* ThingyApp.swift in Sources */,
+				EFA240F026ADCA420034D40E /* CoreBluetoothTypeAliases.swift in Sources */,
+				EFA240F226ADCA420034D40E /* MockThingy52.swift in Sources */,
 				EFA240E226ADCA410034D40E /* ScannerView.swift in Sources */,
 				EFA240E426ADCA410034D40E /* ThingyRowView.swift in Sources */,
 				EFA240E626ADCA410034D40E /* ThingyDetailView.swift in Sources */,
@@ -357,6 +376,7 @@
 			files = (
 				EFA2407E26ADBD610034D40D /* nRFThingy52Tests.swift in Sources */,
 				EFA240F026ADCA410034D40E /* BLEModelTests.swift in Sources */,
+				EFA240F426ADCA420034D40E /* ThingyIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,6 +438,25 @@
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EFA240FA26ADCA410034D40E /* XCRemoteSwiftPackageReference "IOS-CoreBluetooth-Mock" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NordicSemiconductor/IOS-CoreBluetooth-Mock.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EFA240FB26ADCA410034D40E /* CoreBluetoothMock */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EFA240FA26ADCA410034D40E /* XCRemoteSwiftPackageReference "IOS-CoreBluetooth-Mock" */;
+			productName = CoreBluetoothMock;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		EFA2408B26ADBD610034D40D /* Debug */ = {

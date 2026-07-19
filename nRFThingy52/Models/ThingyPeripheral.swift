@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreBluetooth
 import os
 
 @MainActor
@@ -249,7 +248,7 @@ extension ThingyPeripheral {
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        if ( peripheral == basePeripheral) {
+        if peripheral.identifier == peripheralIdentifier {
             logger.debug("Connected to Thingy 52.")
             
             discoverThingyServices()
@@ -257,14 +256,14 @@ extension ThingyPeripheral {
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        if peripheral == basePeripheral {
+        if peripheral.identifier == peripheralIdentifier {
             logger.debug("Failed to connect to Thingy 52: \(error?.localizedDescription ?? "unknown error")")
             delegate?.thingyDidDisconnect()
         }
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        if peripheral == basePeripheral {
+        if peripheral.identifier == peripheralIdentifier {
             logger.debug("Thingy 52 disconnected.")
 
             delegate?.thingyDidDisconnect()

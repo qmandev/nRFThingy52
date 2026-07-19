@@ -10,6 +10,14 @@ import SwiftUI
 @main
 struct ThingyApp: App {
 
+    init() {
+        #if targetEnvironment(simulator)
+        // The simulator has no Bluetooth radio; seed a simulated Thingy:52
+        // so the app (and integration tests) exercise the full BLE flow.
+        ThingyMocks.setUpSimulation()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             ScannerView()

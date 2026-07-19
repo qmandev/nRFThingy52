@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import CoreBluetooth
 @testable import nRFThingy52
 
 // MARK: - Mock peripheral

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreBluetooth
 import Observation
 import os
 
@@ -83,7 +82,9 @@ final class ScannerModel: NSObject {
         wantsScan = true
         guard let centralManager = centralManager else {
             // Scanning starts from centralManagerDidUpdateState once powered on.
-            centralManager = CBCentralManager(delegate: self, queue: nil)
+            // The factory returns the native manager on physical devices and
+            // the CoreBluetoothMock implementation on the simulator.
+            centralManager = CBCentralManagerFactory.instance(delegate: self, queue: nil)
             return
         }
         beginScanIfPossible(centralManager)
