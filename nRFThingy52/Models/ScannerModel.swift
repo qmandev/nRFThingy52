@@ -62,7 +62,17 @@ final class ScannerModel: NSObject {
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "nRFThingy52", category: "ScannerModel")
 
     /// Minimum interval between visible updates of a row (matches the UIKit cell throttle).
-    private static let rowUpdateInterval: TimeInterval = 1.0
+    nonisolated static let rowUpdateInterval: TimeInterval = 1.0
+
+    /// The display name from advertisement data, falling back like the UIKit scanner did.
+    nonisolated static func advertisedName(from advertisementData: [String: Any]) -> String {
+        (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? "Unknown Device".localized
+    }
+
+    /// Whether a row last updated at `lastUpdated` should refresh now (1 s throttle).
+    nonisolated static func shouldRefreshRow(lastUpdated: Date, now: Date = Date()) -> Bool {
+        now.timeIntervalSince(lastUpdated) > rowUpdateInterval
+    }
 
     // MARK: - Public API
 
@@ -100,11 +110,11 @@ final class ScannerModel: NSObject {
 
     private func handleDiscovery(_ central: CBCentralManager, peripheral: CBPeripheral,
                                  advertisementData: [String: Any], rssi: NSNumber) {
-        let name = (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? "Unknown Device".localized
+        let name = Self.advertisedName(from: advertisementData)
         let bucket = RSSIBucket(rssi: rssi.intValue)
 
         if let index = discovered.firstIndex(where: { $0.id == peripheral.identifier }) {
-            guard Date().timeIntervalSince(discovered[index].lastUpdated) > Self.rowUpdateInterval else { return }
+            guard Self.shouldRefreshRow(lastUpdated: discovered[index].lastUpdated) else { return }
             discovered[index].name = name
             discovered[index].rssiBucket = bucket
             discovered[index].lastUpdated = Date()

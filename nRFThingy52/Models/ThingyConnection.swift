@@ -8,6 +8,22 @@
 import Foundation
 import Observation
 
+/// The subset of ThingyPeripheral that ThingyConnection depends on.
+/// A protocol seam so connection-state logic is testable with a mock —
+/// CBPeripheral (and therefore ThingyPeripheral) cannot be instantiated
+/// in unit tests.
+protocol ThingyControlling: AnyObject {
+    var advertisedName: String? { get }
+    var isConnected: Bool { get }
+    var delegate: ThingyDelegate? { get set }
+    func connect()
+    func disconnect()
+    func turnOnLED()
+    func turnOffLED()
+}
+
+extension ThingyPeripheral: ThingyControlling {}
+
 /// Observable connection state for one Thingy, for the SwiftUI detail screen.
 /// Adopts ThingyDelegate and republishes the callbacks as observable
 /// properties, replacing the UIKit ThingyViewController's delegate methods
@@ -22,7 +38,7 @@ final class ThingyConnection {
         case disconnected
     }
 
-    let peripheral: ThingyPeripheral
+    let peripheral: any ThingyControlling
 
     private(set) var state: ConnectionState = .connecting
     private(set) var ledSupported = false
@@ -32,7 +48,7 @@ final class ThingyConnection {
 
     var name: String { peripheral.advertisedName ?? "Unknown Device".localized }
 
-    init(peripheral: ThingyPeripheral) {
+    init(peripheral: any ThingyControlling) {
         self.peripheral = peripheral
         peripheral.delegate = self
     }

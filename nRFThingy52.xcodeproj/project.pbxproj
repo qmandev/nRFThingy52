@@ -10,6 +10,7 @@
 		EFA2407026ADBD600034D40D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFA2406F26ADBD600034D40D /* Assets.xcassets */; };
 		EFA2407326ADBD600034D40D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFA2407126ADBD600034D40D /* LaunchScreen.storyboard */; };
 		EFA2407E26ADBD610034D40D /* nRFThingy52Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA2407D26ADBD610034D40D /* nRFThingy52Tests.swift */; };
+		EFA240F026ADCA410034D40E /* BLEModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA240F126ADCA410034D40E /* BLEModelTests.swift */; };
 		EFA2408926ADBD610034D40D /* nRFThingy52UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA2408826ADBD610034D40D /* nRFThingy52UITests.swift */; };
 		EFA2409826ADBE1F0034D40D /* UIColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA2409726ADBE1F0034D40D /* UIColorExtension.swift */; };
 		EFA2409A26ADBFF00034D40D /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA2409926ADBFF00034D40D /* StringExtension.swift */; };
@@ -48,6 +49,7 @@
 		EFA2407426ADBD600034D40D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EFA2407926ADBD600034D40D /* nRFThingy52Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nRFThingy52Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFA2407D26ADBD610034D40D /* nRFThingy52Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nRFThingy52Tests.swift; sourceTree = "<group>"; };
+		EFA240F126ADCA410034D40E /* BLEModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEModelTests.swift; sourceTree = "<group>"; };
 		EFA2407F26ADBD610034D40D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EFA2408426ADBD610034D40D /* nRFThingy52UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = nRFThingy52UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFA2408826ADBD610034D40D /* nRFThingy52UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nRFThingy52UITests.swift; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				EFA2407D26ADBD610034D40D /* nRFThingy52Tests.swift */,
+				EFA240F126ADCA410034D40E /* BLEModelTests.swift */,
 				EFA2407F26ADBD610034D40D /* Info.plist */,
 			);
 			path = nRFThingy52Tests;
@@ -353,6 +356,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EFA2407E26ADBD610034D40D /* nRFThingy52Tests.swift in Sources */,
+				EFA240F026ADCA410034D40E /* BLEModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
