@@ -12,6 +12,7 @@ import Observation
 /// A protocol seam so connection-state logic is testable with a mock —
 /// CBPeripheral (and therefore ThingyPeripheral) cannot be instantiated
 /// in unit tests.
+@MainActor
 protocol ThingyControlling: AnyObject {
     var advertisedName: String? { get }
     var isConnected: Bool { get }
@@ -90,34 +91,26 @@ extension ThingyConnection: Hashable {
 
 extension ThingyConnection: ThingyDelegate {
 
-    nonisolated func thingyDidConnect(ledSupported: Bool, buttonSupported: Bool) {
-        MainActor.assumeIsolated {
-            state = .connected
-            self.ledSupported = ledSupported
-            self.buttonSupported = buttonSupported
+    func thingyDidConnect(ledSupported: Bool, buttonSupported: Bool) {
+        state = .connected
+        self.ledSupported = ledSupported
+        self.buttonSupported = buttonSupported
 
-            // Device supports neither LED nor button: nothing to show, disconnect.
-            if !ledSupported && !buttonSupported {
-                peripheral.disconnect()
-            }
+        // Device supports neither LED nor button: nothing to show, disconnect.
+        if !ledSupported && !buttonSupported {
+            peripheral.disconnect()
         }
     }
 
-    nonisolated func thingyDidDisconnect() {
-        MainActor.assumeIsolated {
-            state = .disconnected
-        }
+    func thingyDidDisconnect() {
+        state = .disconnected
     }
 
-    nonisolated func buttonStateChanged(isPressed: Bool) {
-        MainActor.assumeIsolated {
-            buttonPressed = isPressed
-        }
+    func buttonStateChanged(isPressed: Bool) {
+        buttonPressed = isPressed
     }
 
-    nonisolated func ledStateChanged(isOn: Bool) {
-        MainActor.assumeIsolated {
-            ledIsOn = isOn
-        }
+    func ledStateChanged(isOn: Bool) {
+        ledIsOn = isOn
     }
 }

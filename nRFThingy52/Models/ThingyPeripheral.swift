@@ -9,6 +9,7 @@ import UIKit
 import CoreBluetooth
 import os
 
+@MainActor
 protocol ThingyDelegate: AnyObject {
     func thingyDidConnect(ledSupported: Bool, buttonSupported: Bool)
     func thingyDidDisconnect()
@@ -16,7 +17,12 @@ protocol ThingyDelegate: AnyObject {
     func ledStateChanged(isOn: Bool)
 }
 
-class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate {
+/// Main-actor isolated: the central manager is created with `queue: nil`, so
+/// every CoreBluetooth callback arrives on the main queue. The
+/// @preconcurrency conformances let the isolated methods satisfy the
+/// nonisolated delegate requirements, with a runtime main-thread assertion.
+@MainActor
+class ThingyPeripheral: NSObject, @preconcurrency CBPeripheralDelegate, @preconcurrency CBCentralManagerDelegate {
     
     // MARK: - Thingy services and charcteristics Identifiers
 
@@ -32,6 +38,9 @@ class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate
     
     private let centralManager                : CBCentralManager
     private let basePeripheral                : CBPeripheral
+    /// Nonisolated copy of the peripheral identifier so the NSObject
+    /// isEqual/hash overrides (nonisolated requirements) can use it.
+    nonisolated let peripheralIdentifier      : UUID
     public private(set) var advertisedName    : String?
     public private(set) var RSSI              : NSNumber
     
@@ -58,6 +67,7 @@ class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate
     init(withPeripheral peripheral: CBPeripheral, advertisementData advertisementDictionary: [String : Any], andRSSI currentRSSI: NSNumber, using manager: CBCentralManager) {
         
         basePeripheral = peripheral
+        peripheralIdentifier = peripheral.identifier
         centralManager = manager
         RSSI = currentRSSI
         super.init()
@@ -209,20 +219,18 @@ class ThingyPeripheral: NSObject, CBPeripheralDelegate, CBCentralManagerDelegate
 
 extension ThingyPeripheral {
     
-    override func isEqual(_ object: Any?) -> Bool {
-        if object is ThingyPeripheral {
-            let peripheralObject = object as! ThingyPeripheral
-            return peripheralObject.basePeripheral.identifier == basePeripheral.identifier
-        } else if object is CBPeripheral {
-            let peripheralObject = object as! CBPeripheral
-            return peripheralObject.identifier == basePeripheral.identifier
+    nonisolated override func isEqual(_ object: Any?) -> Bool {
+        if let peripheralObject = object as? ThingyPeripheral {
+            return peripheralObject.peripheralIdentifier == peripheralIdentifier
+        } else if let peripheralObject = object as? CBPeripheral {
+            return peripheralObject.identifier == peripheralIdentifier
         } else {
             return false
         }
     }
 
-    override var hash: Int {
-        return basePeripheral.identifier.hashValue
+    nonisolated override var hash: Int {
+        return peripheralIdentifier.hashValue
     }
 }
 

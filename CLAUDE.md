@@ -10,7 +10,8 @@ dependencies (no CocoaPods/Carthage/SPM) — everything is built on `CoreBluetoo
 the `Observation` framework directly.
 
 - Bundle ID: `com.armstrongmobile.nRFThingy52`
-- Deployment target: iOS 17.0, Swift 5.0 language mode
+- Deployment target: iOS 17.0, **Swift 6 language mode** (strict concurrency is enforced —
+  data-race safety errors, not warnings). Keep new code warning-free under it.
 - No package manager: do not add a Podfile/Cartfile/Package.swift without discussing it first — the
   project intentionally has zero third-party dependencies.
 - The pre-migration UIKit/storyboard implementation is archived on branch `nRFThingy52UIKit`
@@ -62,8 +63,7 @@ SwiftUI app, three layers, all under `nRFThingy52/`:
      Bluetooth permission prompt fires at first scan) and is its *sole delegate for the app's
      lifetime*; it dedupes discoveries by peripheral identifier into `DiscoveredThingy` rows
      (1 s update throttle), and forwards didConnect/didFailToConnect/didDisconnect/state events
-     to `selectedPeripheral`. CoreBluetooth delegate methods are `nonisolated` and hop via
-     `MainActor.assumeIsolated` (safe: the manager is created with `queue: nil` = main queue).
+     to `selectedPeripheral`.
    - **`ThingyConnection`** wraps one peripheral behind the **`ThingyControlling`** protocol
      (the seam that makes it unit-testable — `CBPeripheral` cannot be instantiated in tests),
      adopts `ThingyDelegate`, and republishes callbacks as observable state
@@ -71,9 +71,18 @@ SwiftUI app, three layers, all under `nRFThingy52/`:
      optimistic and confirmed by the read-back.
    - **`ThingyPeripheral`** is the CoreBluetooth state machine (connect → discover services →
      discover characteristics → enable button notifications → read initial values), carried over
-     from the UIKit app. It hard-codes the Thingy:52 UI service UUIDs (`EF680300`/`301`/`302`).
-     Equality/hash are by `CBPeripheral.identifier`. Logging via `os.Logger` (subsystem = bundle
-     id) — keep using `logger.debug`, not `print`.
+     from the UIKit app. It is `@MainActor` too. It hard-codes the Thingy:52 UI service UUIDs
+     (`EF680300`/`301`/`302`). Equality/hash are by peripheral identifier (kept in a
+     `nonisolated let` because the NSObject `isEqual`/`hash` requirements are nonisolated).
+     Logging via `os.Logger` (subsystem = bundle id) — keep using `logger.debug`, not `print`.
+
+   **Concurrency pattern**: everything is MainActor-isolated, which is *sound because the central
+   manager is created with `queue: nil`* (all CoreBluetooth callbacks arrive on the main queue).
+   The CB delegate conformances are declared `@preconcurrency` so isolated methods satisfy the
+   nonisolated protocol requirements, with a runtime main-thread assertion as the safety net.
+   If you ever move CoreBluetooth off the main queue, this pattern must be redesigned — do not
+   just silence the assertion. `ThingyDelegate` and `ThingyControlling` are `@MainActor`
+   protocols.
 
 **Utilities**: `StringExtension.swift` (`.localized`), `UIColorExtension.swift` (Nordic palette as
 `UIColor`, covered by unit tests), `ColorExtension.swift` (SwiftUI `Color` bridge over the same

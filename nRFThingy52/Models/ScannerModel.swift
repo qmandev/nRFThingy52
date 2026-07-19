@@ -134,49 +134,42 @@ final class ScannerModel: NSObject {
 
 // MARK: - CBCentralManagerDelegate
 
-extension ScannerModel: CBCentralManagerDelegate {
+/// @preconcurrency: the isolated methods satisfy the nonisolated delegate
+/// requirements with a runtime main-thread assertion — safe because the
+/// manager is created with `queue: nil` (main queue delivery).
+extension ScannerModel: @preconcurrency CBCentralManagerDelegate {
 
-    nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        MainActor.assumeIsolated {
-            bluetoothReady = central.state == .poweredOn
-            selectedPeripheral?.centralManagerDidUpdateState(central)
-            if central.state == .poweredOn {
-                beginScanIfPossible(central)
-            } else {
-                logger.debug("Central is not powered on.")
-                isScanning = false
-            }
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        bluetoothReady = central.state == .poweredOn
+        selectedPeripheral?.centralManagerDidUpdateState(central)
+        if central.state == .poweredOn {
+            beginScanIfPossible(central)
+        } else {
+            logger.debug("Central is not powered on.")
+            isScanning = false
         }
     }
 
-    nonisolated func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
-                                    advertisementData: [String: Any], rssi RSSI: NSNumber) {
-        MainActor.assumeIsolated {
-            handleDiscovery(central, peripheral: peripheral, advertisementData: advertisementData, rssi: RSSI)
+    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
+                        advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        handleDiscovery(central, peripheral: peripheral, advertisementData: advertisementData, rssi: RSSI)
+    }
+
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        selectedPeripheral?.centralManager(central, didConnect: peripheral)
+    }
+
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        selectedPeripheral?.centralManager(central, didFailToConnect: peripheral, error: error)
+        if selectedPeripheral?.isEqual(peripheral) == true {
+            selectedPeripheral = nil
         }
     }
 
-    nonisolated func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        MainActor.assumeIsolated {
-            selectedPeripheral?.centralManager(central, didConnect: peripheral)
-        }
-    }
-
-    nonisolated func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        MainActor.assumeIsolated {
-            selectedPeripheral?.centralManager(central, didFailToConnect: peripheral, error: error)
-            if selectedPeripheral?.isEqual(peripheral) == true {
-                selectedPeripheral = nil
-            }
-        }
-    }
-
-    nonisolated func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        MainActor.assumeIsolated {
-            selectedPeripheral?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
-            if selectedPeripheral?.isEqual(peripheral) == true {
-                selectedPeripheral = nil
-            }
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        selectedPeripheral?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
+        if selectedPeripheral?.isEqual(peripheral) == true {
+            selectedPeripheral = nil
         }
     }
 }

@@ -343,3 +343,29 @@ all items re-apply unchanged to the SwiftUI build, plus one addition:
 
 8. Back-swipe cancellation: `.onDisappear` fires later than `viewWillDisappear` did — verify a
    cancelled back-swipe followed by quick interaction doesn't race the reconnect logic.
+
+## 11. Swift 6 Migration (2026-07-19)
+
+The project moved from Swift 5 to **Swift 6 language mode** (all six build configurations), which
+enforces strict concurrency as errors. Changes required:
+
+- **`ThingyPeripheral` became `@MainActor`** with `@preconcurrency` conformances to
+  `CBPeripheralDelegate`/`CBCentralManagerDelegate`. This is sound because the central manager is
+  created with `queue: nil` (main-queue delivery); the `@preconcurrency` conformance adds a
+  runtime main-thread assertion. Isolating the class also resolved the non-Sendable
+  `static let CBUUID` properties (now MainActor-isolated).
+- **NSObject `isEqual`/`hash`** are nonisolated requirements, so the overrides became
+  `nonisolated` and compare a new `nonisolated let peripheralIdentifier: UUID` captured at init
+  instead of touching the isolated `basePeripheral`.
+- **`ThingyDelegate` and `ThingyControlling` became `@MainActor` protocols**, which deleted every
+  `nonisolated` + `MainActor.assumeIsolated` bridge in `ThingyConnection`, and `ScannerModel`'s
+  CB delegate methods became plainly isolated behind an `@preconcurrency` conformance — a net
+  simplification (~40 lines of bridging removed).
+- **Tests**: `MockThingy` became `@MainActor`; `ThingyConnectionTests` swapped its `setUp`
+  override for a `makeSUT()` helper (a `@MainActor` test class cannot override the nonisolated
+  `setUp`). The UI-test template methods gained `@MainActor` for `XCUIApplication` calls.
+
+**Verified:** zero errors and zero Swift warnings across all three targets; all 21 unit tests
+pass; simulator smoke test runs the CoreBluetooth startup path without tripping the runtime
+assertions; device (hardy) build succeeds. On-device BLE interaction remains covered by the
+section-9 checklist (unchanged).

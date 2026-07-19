@@ -12,6 +12,7 @@ import CoreBluetooth
 // MARK: - Mock peripheral
 
 /// Records calls and lets tests drive ThingyDelegate callbacks without CoreBluetooth.
+@MainActor
 final class MockThingy: ThingyControlling {
     var advertisedName: String? = "Mock Thingy"
     var isConnected = false
@@ -76,32 +77,32 @@ final class ScannerModelHelperTests: XCTestCase {
 @MainActor
 final class ThingyConnectionTests: XCTestCase {
 
-    private var mock: MockThingy!
-    private var connection: ThingyConnection!
-
-    override func setUp() {
-        super.setUp()
-        mock = MockThingy()
-        connection = ThingyConnection(peripheral: mock)
+    private func makeSUT() -> (mock: MockThingy, connection: ThingyConnection) {
+        let mock = MockThingy()
+        return (mock, ThingyConnection(peripheral: mock))
     }
 
     func testInitBecomesPeripheralDelegateAndStartsConnecting() {
+        let (mock, connection) = makeSUT()
         XCTAssertTrue(mock.delegate === connection)
         XCTAssertEqual(connection.state, .connecting)
     }
 
     func testConnectCallsPeripheralWhenDisconnected() {
+        let (mock, connection) = makeSUT()
         connection.connect()
         XCTAssertEqual(mock.connectCalls, 1)
     }
 
     func testConnectSkipsWhenAlreadyConnected() {
+        let (mock, connection) = makeSUT()
         mock.isConnected = true
         connection.connect()
         XCTAssertEqual(mock.connectCalls, 0)
     }
 
     func testDidConnectPublishesSupportFlags() {
+        let (mock, connection) = makeSUT()
         connection.thingyDidConnect(ledSupported: true, buttonSupported: true)
         XCTAssertEqual(connection.state, .connected)
         XCTAssertTrue(connection.ledSupported)
@@ -110,17 +111,20 @@ final class ThingyConnectionTests: XCTestCase {
     }
 
     func testDidConnectWithNoSupportedFeaturesDisconnects() {
+        let (mock, connection) = makeSUT()
         connection.thingyDidConnect(ledSupported: false, buttonSupported: false)
         XCTAssertEqual(mock.disconnectCalls, 1)
     }
 
     func testDidDisconnectPublishesDisconnectedState() {
+        let (_, connection) = makeSUT()
         connection.thingyDidConnect(ledSupported: true, buttonSupported: true)
         connection.thingyDidDisconnect()
         XCTAssertEqual(connection.state, .disconnected)
     }
 
     func testLEDStateChangesArePublished() {
+        let (_, connection) = makeSUT()
         connection.ledStateChanged(isOn: true)
         XCTAssertTrue(connection.ledIsOn)
         connection.ledStateChanged(isOn: false)
@@ -128,6 +132,7 @@ final class ThingyConnectionTests: XCTestCase {
     }
 
     func testButtonStateChangesArePublished() {
+        let (_, connection) = makeSUT()
         connection.buttonStateChanged(isPressed: true)
         XCTAssertTrue(connection.buttonPressed)
         connection.buttonStateChanged(isPressed: false)
@@ -135,6 +140,7 @@ final class ThingyConnectionTests: XCTestCase {
     }
 
     func testSetLEDIsOptimisticAndForwards() {
+        let (mock, connection) = makeSUT()
         connection.setLED(on: true)
         XCTAssertTrue(connection.ledIsOn)
         XCTAssertEqual(mock.turnOnCalls, 1)
@@ -145,6 +151,7 @@ final class ThingyConnectionTests: XCTestCase {
     }
 
     func testNameFallsBackWhenPeripheralHasNoName() {
+        let (mock, connection) = makeSUT()
         XCTAssertEqual(connection.name, "Mock Thingy")
         mock.advertisedName = nil
         XCTAssertEqual(connection.name, "Unknown Device".localized)

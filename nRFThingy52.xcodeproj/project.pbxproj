@@ -552,7 +552,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -571,7 +571,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -592,7 +592,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/nRFThingy52.app/nRFThingy52";
 			};
@@ -614,7 +614,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/nRFThingy52.app/nRFThingy52";
 			};
@@ -634,7 +634,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52UITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = nRFThingy52;
 			};
@@ -654,7 +654,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.armstrongmobile.nRFThingy52UITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = nRFThingy52;
 			};
