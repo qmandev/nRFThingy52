@@ -24,3 +24,9 @@
 "If not, connect it to a PC or a charger using a micro USB cable. Coin cell battery is on the bottom side of the dev kit." = "If not, connect it to a PC or a charger using a micro USB cable. Coin cell battery is on the bottom side of the dev kit.";
 "Toggling the switch will cause the LED on the Thingy to turn ON or OFF." = "Toggling the switch will cause the LED on the Thingy to turn ON or OFF.";
 "Pressing and releasing the button on the Thingy will update the state here." = "Pressing and releasing the button on the Thingy will update the state here.";
+"Environment" = "Environment";
+"Temperature" = "Temperature";
+"Humidity" = "Humidity";
+"Pressure" = "Pressure";
+"Air Quality" = "Air Quality";
+"Live sensor readings streamed from the Thingy." = "Live sensor readings streamed from the Thingy.";

@@ -18,6 +18,11 @@ private extension CBMUUID {
     @MainActor static let thingyUIService         = CBMUUID(string: "EF680300-9B35-4933-9B10-52FFA9740042")
     @MainActor static let thingyLEDCharacteristic = CBMUUID(string: "EF680301-9B35-4933-9B10-52FFA9740042")
     @MainActor static let thingyButtonCharacteristic = CBMUUID(string: "EF680302-9B35-4933-9B10-52FFA9740042")
+    @MainActor static let thingyEnvService        = CBMUUID(string: "EF680200-9B35-4933-9B10-52FFA9740042")
+    @MainActor static let thingyTemperature       = CBMUUID(string: "EF680201-9B35-4933-9B10-52FFA9740042")
+    @MainActor static let thingyPressure          = CBMUUID(string: "EF680202-9B35-4933-9B10-52FFA9740042")
+    @MainActor static let thingyHumidity          = CBMUUID(string: "EF680203-9B35-4933-9B10-52FFA9740042")
+    @MainActor static let thingyAirQuality        = CBMUUID(string: "EF680204-9B35-4933-9B10-52FFA9740042")
 }
 
 private extension CBMCharacteristicMock {
@@ -30,12 +35,36 @@ private extension CBMCharacteristicMock {
         properties: [.notify, .read],
         descriptors: CBMClientCharacteristicConfigurationDescriptorMock()
     )
+    @MainActor static let thingyTemperature = CBMCharacteristicMock(
+        type: .thingyTemperature,
+        properties: [.notify],
+        descriptors: CBMClientCharacteristicConfigurationDescriptorMock()
+    )
+    @MainActor static let thingyPressure = CBMCharacteristicMock(
+        type: .thingyPressure,
+        properties: [.notify],
+        descriptors: CBMClientCharacteristicConfigurationDescriptorMock()
+    )
+    @MainActor static let thingyHumidity = CBMCharacteristicMock(
+        type: .thingyHumidity,
+        properties: [.notify],
+        descriptors: CBMClientCharacteristicConfigurationDescriptorMock()
+    )
+    @MainActor static let thingyAirQuality = CBMCharacteristicMock(
+        type: .thingyAirQuality,
+        properties: [.notify],
+        descriptors: CBMClientCharacteristicConfigurationDescriptorMock()
+    )
 }
 
 private extension CBMServiceMock {
     @MainActor static let thingyUI = CBMServiceMock(
         type: .thingyUIService, primary: true,
         characteristics: .thingyButton, .thingyLED
+    )
+    @MainActor static let thingyEnvironment = CBMServiceMock(
+        type: .thingyEnvService, primary: true,
+        characteristics: .thingyTemperature, .thingyPressure, .thingyHumidity, .thingyAirQuality
     )
 }
 
@@ -100,7 +129,7 @@ enum ThingyMocks {
             withInterval: 0.250)
         .connectable(
             name: mockName,
-            services: [.thingyUI],
+            services: [.thingyUI, .thingyEnvironment],
             delegate: specDelegate,
             connectionInterval: 0.045,
             mtu: 23)
@@ -140,5 +169,39 @@ enum ThingyMocks {
 
     static func disconnectThingy() {
         thingy52.simulateDisconnection()
+    }
+
+    // MARK: Environment simulation
+
+    /// Pushes one full set of environment readings as notifications.
+    static func simulateEnvironment(temperature: Double, humidity: Int, pressure: Double,
+                                    eco2: Int, tvoc: Int) {
+        thingy52.simulateValueUpdate(ThingyEnvironment.encodeTemperature(celsius: temperature),
+                                     for: .thingyTemperature)
+        thingy52.simulateValueUpdate(ThingyEnvironment.encodeHumidity(percent: humidity),
+                                     for: .thingyHumidity)
+        thingy52.simulateValueUpdate(ThingyEnvironment.encodePressure(hPa: pressure),
+                                     for: .thingyPressure)
+        thingy52.simulateValueUpdate(ThingyEnvironment.encodeAirQuality(eco2: eco2, tvoc: tvoc),
+                                     for: .thingyAirQuality)
+    }
+
+    private static var demoTimer: Timer?
+
+    /// Drifting demo readings so the simulator dashboard is alive.
+    static func startEnvironmentDemo() {
+        guard demoTimer == nil else { return }
+        var temp = 22.5, hum = 45.0, press = 1013.2, eco2 = 480.0, tvoc = 18.0
+        demoTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            MainActor.assumeIsolated {
+                temp  = min(30, max(15, temp + Double.random(in: -0.3...0.3)))
+                hum   = min(70, max(25, hum + Double.random(in: -1...1)))
+                press = min(1040, max(980, press + Double.random(in: -0.5...0.5)))
+                eco2  = min(1200, max(400, eco2 + Double.random(in: -20...20)))
+                tvoc  = min(120, max(0, tvoc + Double.random(in: -4...4)))
+                simulateEnvironment(temperature: temp, humidity: Int(hum), pressure: press,
+                                    eco2: Int(eco2), tvoc: Int(tvoc))
+            }
+        }
     }
 }

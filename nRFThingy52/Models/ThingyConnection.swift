@@ -47,6 +47,19 @@ final class ThingyConnection {
     private(set) var ledIsOn = false
     private(set) var buttonPressed = false
 
+    // Environment sensors (nil until the first reading arrives).
+    private(set) var temperature: Double?
+    private(set) var humidity: Int?
+    private(set) var pressure: Double?
+    private(set) var eco2: Int?
+    private(set) var tvoc: Int?
+
+    /// True once any environment reading has been received — used to decide
+    /// whether to show the dashboard section (a Blinky-style device never sets it).
+    var hasEnvironmentData: Bool {
+        temperature != nil || humidity != nil || pressure != nil || eco2 != nil
+    }
+
     var name: String { peripheral.advertisedName ?? "Unknown Device".localized }
 
     init(peripheral: any ThingyControlling) {
@@ -112,5 +125,19 @@ extension ThingyConnection: ThingyDelegate {
 
     func ledStateChanged(isOn: Bool) {
         ledIsOn = isOn
+    }
+
+    func environmentDidUpdate(_ reading: EnvironmentReading) {
+        switch reading {
+        case .temperature(let celsius):
+            temperature = celsius
+        case .humidity(let percent):
+            humidity = percent
+        case .pressure(let hPa):
+            pressure = hPa
+        case .airQuality(let eco2, let tvoc):
+            self.eco2 = eco2
+            self.tvoc = tvoc
+        }
     }
 }

@@ -71,6 +71,41 @@ final class ScannerModelHelperTests: XCTestCase {
     }
 }
 
+// MARK: - Environment parsing
+
+final class ThingyEnvironmentTests: XCTestCase {
+
+    func testTemperatureParsingPositiveAndNegative() {
+        XCTAssertEqual(ThingyEnvironment.parseTemperature(Data([22, 50])),
+                       .temperature(celsius: 22.5))
+        XCTAssertEqual(ThingyEnvironment.parseTemperature(Data([UInt8(bitPattern: -5), 25])),
+                       .temperature(celsius: -5.25))
+        XCTAssertNil(ThingyEnvironment.parseTemperature(Data([1])))
+    }
+
+    func testPressureParsing() {
+        XCTAssertEqual(ThingyEnvironment.parsePressure(ThingyEnvironment.encodePressure(hPa: 1013.25)),
+                       .pressure(hPa: 1013.25))
+        XCTAssertNil(ThingyEnvironment.parsePressure(Data([0, 0, 0])))
+    }
+
+    func testHumidityParsing() {
+        XCTAssertEqual(ThingyEnvironment.parseHumidity(Data([47])), .humidity(percent: 47))
+        XCTAssertNil(ThingyEnvironment.parseHumidity(Data()))
+    }
+
+    func testAirQualityParsing() {
+        XCTAssertEqual(ThingyEnvironment.parseAirQuality(ThingyEnvironment.encodeAirQuality(eco2: 450, tvoc: 1200)),
+                       .airQuality(eco2: 450, tvoc: 1200))
+        XCTAssertNil(ThingyEnvironment.parseAirQuality(Data([1, 2])))
+    }
+
+    func testTemperatureEncodingRoundTrip() {
+        XCTAssertEqual(ThingyEnvironment.parseTemperature(ThingyEnvironment.encodeTemperature(celsius: 22.5)),
+                       .temperature(celsius: 22.5))
+    }
+}
+
 // MARK: - ThingyConnection
 
 @MainActor

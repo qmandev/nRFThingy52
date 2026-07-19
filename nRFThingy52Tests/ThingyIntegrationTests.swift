@@ -123,6 +123,34 @@ final class ThingyIntegrationTests: XCTestCase {
         withExtendedLifetime(scanner) {}
     }
 
+    /// Environment dashboard: sensor notifications flow end-to-end into
+    /// observable state after connection.
+    func testEnvironmentReadingsStreamToConnection() async throws {
+        try XCTSkipUnless(isSimulator, "Mock manager exists only on the simulator")
+        let (scanner, connection) = try await connectToThingy()
+
+        // The environment characteristics subscribe shortly after the button
+        // handshake completes; keep pushing until the notifications land.
+        let deadline = Date().addingTimeInterval(5)
+        while !connection.hasEnvironmentData {
+            if Date() > deadline {
+                XCTFail("Timed out waiting for environment readings")
+                return
+            }
+            ThingyMocks.simulateEnvironment(temperature: 23.5, humidity: 48,
+                                            pressure: 1008.75, eco2: 520, tvoc: 34)
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        XCTAssertEqual(connection.temperature, 23.5)
+        XCTAssertEqual(connection.humidity, 48)
+        XCTAssertEqual(connection.pressure, 1008.75)
+        XCTAssertEqual(connection.eco2, 520)
+        XCTAssertEqual(connection.tvoc, 34)
+        connection.disconnect()
+        withExtendedLifetime(scanner) {}
+    }
+
     /// Item 7 (variant): peripheral-initiated disconnection surfaces the
     /// disconnected state via the scanner's forwarding.
     func testPeripheralInitiatedDisconnect() async throws {

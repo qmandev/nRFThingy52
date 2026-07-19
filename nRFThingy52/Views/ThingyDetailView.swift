@@ -42,6 +42,23 @@ struct ThingyDetailView: View {
             } footer: {
                 Text("Pressing and releasing the button on the Thingy will update the state here.")
             }
+
+            if connection.hasEnvironmentData {
+                Section {
+                    sensorRow(symbol: "thermometer.medium", label: "Temperature",
+                              value: connection.temperature.map { String(format: "%.1f °C", $0) })
+                    sensorRow(symbol: "humidity", label: "Humidity",
+                              value: connection.humidity.map { "\($0) %" })
+                    sensorRow(symbol: "gauge.with.dots.needle.bottom.50percent", label: "Pressure",
+                              value: connection.pressure.map { String(format: "%.1f hPa", $0) })
+                    sensorRow(symbol: "aqi.medium", label: "Air Quality",
+                              value: airQualityText)
+                } header: {
+                    Text("Environment")
+                } footer: {
+                    Text("Live sensor readings streamed from the Thingy.")
+                }
+            }
         }
         .navigationTitle(connection.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -54,6 +71,26 @@ struct ThingyDetailView: View {
         .onDisappear {
             connection.disconnect()
         }
+    }
+
+    // MARK: - Environment rows
+
+    private func sensorRow(symbol: String, label: LocalizedStringKey, value: String?) -> some View {
+        HStack {
+            Image(systemName: symbol)
+                .foregroundStyle(.tint)
+                .frame(width: 28)
+            Text(label)
+            Spacer()
+            Text(value ?? "—")
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+    }
+
+    private var airQualityText: String? {
+        guard let eco2 = connection.eco2, let tvoc = connection.tvoc else { return nil }
+        return "\(eco2) ppm · \(tvoc) ppb"
     }
 
     // MARK: - Derived state

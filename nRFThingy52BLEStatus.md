@@ -395,3 +395,29 @@ BLE pipeline is testable before the physical Thingy:52 arrives:
 builds both succeed. The §9 checklist now serves as hardware *confirmation* of behavior already
 verified against the mock — items 1–7 have simulator-level coverage; item 8 (back-swipe timing)
 remains UI-level.
+
+## 13. Environment Dashboard (2026-07-19)
+
+First product extension from the `nordicSemi.md` roadmap: the Thingy:52 **Environment service**
+(`EF6802xx` — temperature, pressure, humidity, air quality eCO₂/TVOC) added end-to-end:
+
+- `ThingyEnvironment.swift` — UUIDs, `EnvironmentReading` type, and pure (unit-tested)
+  parse/encode functions for the Thingy wire formats.
+- `ThingyPeripheral` discovers both UI and Environment services, subscribes to all environment
+  notifications, and delivers decoded readings via a new optional-by-default
+  `ThingyDelegate.environmentDidUpdate` callback.
+- `ThingyConnection` publishes `temperature`/`humidity`/`pressure`/`eco2`/`tvoc`;
+  `ThingyDetailView` shows an "Environment" section (SF Symbol rows, monospaced values) that
+  appears only once readings arrive — so LED-Button-only devices are unaffected.
+- Mock: the simulated Thingy gained the Environment service; `ThingyMocks.simulateEnvironment`
+  drives exact values for tests, and a drifting demo timer animates the simulator dashboard
+  (disabled under XCTest, where it was found clobbering test values).
+- Localization: 6 new keys across all 16 locales. Motion service (`EF6804xx`) deferred.
+
+**Verified:** 34/34 unit/integration tests (5 new parser tests + an end-to-end
+environment-streaming test), plus a new XCUITest (`testEnvironmentDashboardShows`) that taps
+from scanner to detail and asserts all four sensor rows render — passed twice. Bring-up
+finding: environment characteristics subscribe *after* the button handshake that flips
+`state == .connected`, so early pushes are dropped — the integration test pushes until
+delivery; a hardware Thingy streams continuously so real usage is unaffected (hardware
+confirmation added to §9 scope).

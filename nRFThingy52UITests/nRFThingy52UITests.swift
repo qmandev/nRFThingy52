@@ -22,14 +22,25 @@ class nRFThingy52UITests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
+    /// Drives the simulator app (with its mocked Thingy:52) from scanner to
+    /// the detail screen and verifies the environment dashboard renders.
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testEnvironmentDashboardShows() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use recording to get started writing UI tests.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let mockRow = app.staticTexts["Thingy52 Mock"]
+        XCTAssertTrue(mockRow.waitForExistence(timeout: 10), "Mock Thingy should be discovered")
+        mockRow.tap()
+
+        XCTAssertTrue(app.staticTexts["Temperature"].waitForExistence(timeout: 10),
+                      "Environment dashboard should appear once readings stream")
+        XCTAssertTrue(app.staticTexts["Humidity"].exists)
+        XCTAssertTrue(app.staticTexts["Pressure"].exists)
+        XCTAssertTrue(app.staticTexts["Air Quality"].exists)
+
+        // Hold the screen briefly so an external screenshot can capture it.
+        Thread.sleep(forTimeInterval: 8)
     }
 
     @MainActor

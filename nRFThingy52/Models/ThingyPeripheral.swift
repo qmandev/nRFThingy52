@@ -14,6 +14,12 @@ protocol ThingyDelegate: AnyObject {
     func thingyDidDisconnect()
     func buttonStateChanged(isPressed: Bool)
     func ledStateChanged(isOn: Bool)
+    func environmentDidUpdate(_ reading: EnvironmentReading)
+}
+
+extension ThingyDelegate {
+    // Environment updates are optional for delegates that only care about LED/button.
+    func environmentDidUpdate(_ reading: EnvironmentReading) {}
 }
 
 /// Main-actor isolated: the central manager is created with `queue: nil`, so
@@ -135,10 +141,11 @@ class ThingyPeripheral: NSObject, @preconcurrency CBPeripheralDelegate, @preconc
     // MARK: Implementation
     
     private func discoverThingyServices() {
-        logger.debug("Discovering LED Button (up to change) Service ...")
+        logger.debug("Discovering Thingy UI and Environment services ...")
         basePeripheral.delegate = self
-        
-        basePeripheral.discoverServices([ThingyPeripheral.nordicThingyServiceUUID]) // 1523 for Blinky
+
+        basePeripheral.discoverServices([ThingyPeripheral.nordicThingyServiceUUID,
+                                         ThingyEnvironment.serviceUUID])
     }
     
     private func parseAdvertisementData(_ advertisementDictionary: [String : Any]) -> String? {
@@ -280,11 +287,30 @@ extension ThingyPeripheral {
             if let value = characteristic.value {
                 didWriteValueToLED(value)
             }
-            
+
         } else if characteristic.uuid == ThingyPeripheral.buttonCharacteristicUUID {
             if let value = characteristic.value {
                 didReceiveButtonNotification(withValue: value)
             }
+        } else if let value = characteristic.value,
+                  let reading = environmentReading(for: characteristic.uuid, data: value) {
+            delegate?.environmentDidUpdate(reading)
+        }
+    }
+
+    /// Decodes an Environment-service characteristic value, or nil for other UUIDs.
+    private func environmentReading(for uuid: CBUUID, data: Data) -> EnvironmentReading? {
+        switch uuid {
+        case ThingyEnvironment.temperatureCharacteristicUUID:
+            return ThingyEnvironment.parseTemperature(data)
+        case ThingyEnvironment.pressureCharacteristicUUID:
+            return ThingyEnvironment.parsePressure(data)
+        case ThingyEnvironment.humidityCharacteristicUUID:
+            return ThingyEnvironment.parseHumidity(data)
+        case ThingyEnvironment.airQualityCharacteristicUUID:
+            return ThingyEnvironment.parseAirQuality(data)
+        default:
+            return nil
         }
     }
     
@@ -304,17 +330,29 @@ extension ThingyPeripheral {
         if let services = peripheral.services {
             for service in services {
                 if service.uuid == ThingyPeripheral.nordicThingyServiceUUID {
-                    logger.debug("Thingy 52 Service found")
-                    
-                    // Capture and discover all characteristics for Thingy service
+                    logger.debug("Thingy 52 UI Service found")
                     discoverCharacteristicsForThingyService(service)
-                    return
+                } else if service.uuid == ThingyEnvironment.serviceUUID {
+                    logger.debug("Thingy 52 Environment Service found")
+                    basePeripheral.discoverCharacteristics([ThingyEnvironment.temperatureCharacteristicUUID,
+                                                            ThingyEnvironment.pressureCharacteristicUUID,
+                                                            ThingyEnvironment.humidityCharacteristicUUID,
+                                                            ThingyEnvironment.airQualityCharacteristicUUID],
+                                                           for: service)
                 }
             }
         }
     }
-    
+
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if service.uuid == ThingyEnvironment.serviceUUID {
+            // Subscribe to every environment sensor; values stream via notifications.
+            for characteristic in service.characteristics ?? [] where characteristic.properties.contains(.notify) {
+                basePeripheral.setNotifyValue(true, for: characteristic)
+            }
+            return
+        }
+
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
                 if characteristic.uuid == ThingyPeripheral.ledCharacteristicUUID {
@@ -325,14 +363,14 @@ extension ThingyPeripheral {
                 }
             }
         }
-        
+
         // if Button Characteristic found, try to enable notifications on it
         if let buttonCharacteristic = buttonCharacteristic {
             enableNotifications(for: buttonCharacteristic)
         } else {
             // else, notify the delegate and try to read LED state
             delegate?.thingyDidConnect(ledSupported: ledCharacteristic != nil, buttonSupported: false)
-            
+
             // if LED Characteristics is not found, this method will not do anything
             readLEDValue()
         }

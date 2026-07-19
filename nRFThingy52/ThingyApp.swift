@@ -15,6 +15,11 @@ struct ThingyApp: App {
         // The simulator has no Bluetooth radio; seed a simulated Thingy:52
         // so the app (and integration tests) exercise the full BLE flow.
         ThingyMocks.setUpSimulation()
+        // Live demo readings for interactive use only — under XCTest the
+        // integration tests drive the sensor values themselves.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            ThingyMocks.startEnvironmentDemo()
+        }
         #endif
     }
 
