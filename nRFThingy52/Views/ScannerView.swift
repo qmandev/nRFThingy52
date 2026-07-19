@@ -66,6 +66,8 @@ struct ScannerView: View {
                 Text("CAN'T SEE YOUR THINGY?")
             } icon: {
                 Image("scanning")
+                    .renderingMode(.template)
+                    .foregroundStyle(.secondary)
             }
         } description: {
             VStack(alignment: .leading, spacing: 6) {
