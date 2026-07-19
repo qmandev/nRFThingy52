@@ -246,5 +246,44 @@ scanner's `viewDidAppear`.
     untested (would require `CoreBluetooth` mocks); the UI test target is untouched.
 
 *Note: fixes were authored on a machine without full Xcode, so they were code-reviewed but not
-compile-verified at the time of writing — verify with a build and an on-device test against a
-physical Thingy:52.*
+compile-verified at the time of writing. Compile verification and partial runtime verification
+were completed later the same day — see section 9.*
+
+## 9. Test Status (2026-07-18)
+
+Additional UI fixes verified this session (committed): the scanner's empty-state view was rebuilt
+with proper Auto Layout constraints (labels previously overlapped and clipped on modern screens),
+long hint labels now wrap, the scanning indicator hides when stopped, and the iOS 26 Liquid Glass
+capsule behind the nav-bar indicator is suppressed via `hidesSharedBackground`.
+
+### Verified ✅
+
+**Toolchain / simulator (Xcode 26.3):**
+- App builds cleanly for simulator and device; test bundles build with the new team (`7AVEYWK246`).
+- All 6 unit tests pass on the iPhone 15 simulator.
+- App runs on the iPhone 17 Pro simulator (iOS 26.3.1): empty-state layout renders correctly
+  (centered, no overlap/clipping), no stray Liquid Glass capsule, spinner hidden while not
+  scanning (simulator has no Bluetooth radio, so scanning never starts there).
+
+**On device — "hardy Pond" (iPhone 13):**
+- Install and launch succeed (both via `devicectl` and Xcode).
+- Fresh install shows the Bluetooth permission prompt ("Allow nRFThingy52 to find Bluetooth
+  devices?"); an overwrite install correctly does not re-prompt.
+- After granting permission, scanning auto-starts from `centralManagerDidUpdateState` with no
+  relaunch needed, and the white spinner animates in the nav bar while scanning.
+
+### Pending — requires a physical Thingy:52 ⏳
+
+1. Thingy:52 appears under "Nearby Devices" while advertising, with the RSSI icon strengthening
+   as the phone moves closer (validates service-UUID scan filter and RSSI bucket fix).
+2. Tapping the discovered device pushes the Thingy screen without crashing (segue-identifier fix).
+3. LED switch toggles the physical LED both ways, and the label confirms ON/OFF via the
+   read-back after write (characteristic write-callback fix).
+4. Pressing/releasing the Thingy's button flips the label to PRESSED/RELEASED with a haptic tap
+   (notification path).
+5. Navigating back disconnects cleanly; re-selecting the device reconnects (viewWillDisappear
+   lifecycle fix plus scanner-owned central-manager delegate forwarding).
+6. Toggling Bluetooth off while on the Thingy screen shows the red disconnected state
+   (state-change forwarding to the selected peripheral).
+
+Re-run this checklist when a Thingy:52 is available and update this section with the results.
