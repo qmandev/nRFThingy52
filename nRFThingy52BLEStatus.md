@@ -245,6 +245,24 @@ scanner's `viewDidAppear`.
     resolution, and the `String.localized` key fallback. `ThingyPeripheral`'s BLE logic remains
     untested (would require `CoreBluetooth` mocks); the UI test target is untouched.
 
+### Ported from iOS-nRF-Blinky (2026-07-18)
+
+A comparison with the sibling `iOS-nRF-Blinky` project (this app's original template) found two
+fixes it had that this app lacked; both were ported:
+
+14. **`hash` override paired with `isEqual`** (`ThingyPeripheral.swift`)
+    `ThingyPeripheral` overrides `isEqual` (identity by `CBPeripheral.identifier`) but never
+    overrode `hash`, violating the NSObject equality/hash contract. Added
+    `override var hash: Int { basePeripheral.identifier.hashValue }` so peripherals behave
+    correctly in `Set`/`Dictionary`/hashing contexts.
+
+15. **Connection-failure handling** (`ThingyPeripheral.swift`, `ScannerTableViewController.swift`)
+    `centralManager(_:didFailToConnect:error:)` was previously unimplemented, so a failed
+    connection attempt left the Thingy screen stuck on "Scanning..." forever. The peripheral now
+    logs the failure and notifies its delegate via `thingyDidDisconnect` (red disconnected UI),
+    and the scanner forwards the event to `selectedPeripheral` (then clears it), consistent with
+    the other central-manager event routing. Verified: simulator build and all 6 unit tests pass.
+
 *Note: fixes were authored on a machine without full Xcode, so they were code-reviewed but not
 compile-verified at the time of writing. Compile verification and partial runtime verification
 were completed later the same day — see section 9.*
@@ -285,5 +303,7 @@ capsule behind the nav-bar indicator is suppressed via `hidesSharedBackground`.
    lifecycle fix plus scanner-owned central-manager delegate forwarding).
 6. Toggling Bluetooth off while on the Thingy screen shows the red disconnected state
    (state-change forwarding to the selected peripheral).
+7. A failed connection attempt (e.g. powering the Thingy off right after tapping it) shows the
+   red disconnected state instead of hanging on "Scanning..." (`didFailToConnect` port, item 15).
 
 Re-run this checklist when a Thingy:52 is available and update this section with the results.

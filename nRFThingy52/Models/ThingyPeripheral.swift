@@ -220,6 +220,10 @@ extension ThingyPeripheral {
             return false
         }
     }
+
+    override var hash: Int {
+        return basePeripheral.identifier.hashValue
+    }
 }
 
 
@@ -244,10 +248,17 @@ extension ThingyPeripheral {
         }
     }
     
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        if peripheral == basePeripheral {
+            logger.debug("Failed to connect to Thingy 52: \(error?.localizedDescription ?? "unknown error")")
+            delegate?.thingyDidDisconnect()
+        }
+    }
+
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if peripheral == basePeripheral {
             logger.debug("Thingy 52 disconnected.")
-            
+
             delegate?.thingyDidDisconnect()
         }
     }

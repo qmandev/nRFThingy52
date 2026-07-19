@@ -197,6 +197,13 @@ extension ScannerTableViewController {
         selectedPeripheral?.centralManager(central, didConnect: peripheral)
     }
 
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        selectedPeripheral?.centralManager(central, didFailToConnect: peripheral, error: error)
+        if selectedPeripheral?.isEqual(peripheral) == true {
+            selectedPeripheral = nil
+        }
+    }
+
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         selectedPeripheral?.centralManager(central, didDisconnectPeripheral: peripheral, error: error)
         if selectedPeripheral?.isEqual(peripheral) == true {
