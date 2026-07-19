@@ -4,7 +4,8 @@ An iOS app for discovering and interacting with a [Nordic Thingy:52](https://www
 Bluetooth LE development kit. Scan for nearby Thingys, connect, toggle the on-board LED, and watch
 the physical button state update live — with haptic feedback on each press.
 
-Built with Swift, UIKit, and CoreBluetooth. **No third-party dependencies.**
+Built with SwiftUI, the Observation framework, and CoreBluetooth. **No third-party dependencies.**
+The original UIKit/storyboard implementation is archived on the `nRFThingy52UIKit` branch.
 
 ## Features
 
@@ -13,15 +14,14 @@ Built with Swift, UIKit, and CoreBluetooth. **No third-party dependencies.**
 - **LED control** — toggle the Thingy's LED from a switch; writes are confirmed by a follow-up
   read so the UI reflects the device's actual state.
 - **Button monitoring** — the Thingy's physical button state (PRESSED/RELEASED) streams in via
-  BLE notifications, with `UIImpactFeedbackGenerator` haptics on each change.
-- **Localized** into 16 languages.
-- Light/dark mode aware, Nordic-branded UI.
+  BLE notifications, with `.sensoryFeedback` haptics on each press.
+- **Localized** into 16 languages; light/dark mode native.
 
 ## Requirements
 
 | | |
 |---|---|
-| iOS deployment target | 14.5 |
+| iOS deployment target | 17.0 |
 | Xcode | any recent (verified with Xcode 26.3) |
 | Hardware | a physical Thingy:52 and an iPhone/iPad — the simulator has no Bluetooth radio |
 | Dependencies | none (no CocoaPods / Carthage / SPM) |
@@ -51,52 +51,49 @@ xcodebuild -project nRFThingy52.xcodeproj -scheme nRFThingy52 \
 
 ## Architecture
 
-The app is a two-screen storyboard flow inside a navigation controller. All CoreBluetooth
-complexity is concentrated in a single model class, `ThingyPeripheral`, which exposes a simple
-four-method delegate protocol to the UI layer.
+SwiftUI views observe `@Observable` models; all CoreBluetooth complexity is concentrated in
+`ThingyPeripheral`, with `ScannerModel` as the app-lifetime central-manager owner and
+`ThingyConnection` as the per-device observable wrapper.
 
 ```mermaid
 flowchart TB
-    subgraph UI["UI Layer (storyboard-driven)"]
-        ROOT["RootViewController\n(UINavigationController)"]
-        SCAN["ScannerTableViewController\nscans & lists nearby Thingys"]
-        CELL["ScannerTableViewCell\nname + RSSI icon"]
-        DETAIL["ThingyViewController\nLED switch / button state"]
+    subgraph APP["App"]
+        MAIN["ThingyApp (@main)\nNordic tint, native Liquid Glass bar"]
     end
-
-    subgraph MODEL["Model Layer"]
-        TP["ThingyPeripheral\nwraps CBPeripheral\nimplements CBPeripheralDelegate\n+ CBCentralManagerDelegate handlers"]
+    subgraph VIEWS["SwiftUI Views"]
+        SCANV["ScannerView\nList + ContentUnavailableView\nNavigationStack root"]
+        ROWV["ThingyRowView\nname + RSSI icon"]
+        DETV["ThingyDetailView\nLED Toggle + button state\n.sensoryFeedback haptics"]
     end
-
-    subgraph CB["CoreBluetooth"]
-        CM["CBCentralManager\n(owned by scanner,\nscanner stays sole delegate)"]
-        PERIPH["CBPeripheral"]
+    subgraph MODELS["Observable models (@MainActor @Observable)"]
+        SCANVM["ScannerModel\nowns CBCentralManager (lazy)\nsole central delegate\ndedupe + 1s row throttle"]
+        DETVM["ThingyConnection\nwraps ThingyControlling\nstate / led / button published"]
     end
-
+    subgraph CORE["CoreBluetooth core"]
+        TP["ThingyPeripheral\nconnect → discover → notify → read\n(ThingyControlling conformance)"]
+    end
     THINGY(["Thingy:52 hardware\nUI Service EF680300-...\nLED EF680301 / Button EF680302"])
 
-    ROOT --> SCAN
-    SCAN --> CELL
-    SCAN -- "segue PushThingyView\npasses ThingyPeripheral" --> DETAIL
-    SCAN -- "owns + delegate" --> CM
-    SCAN -- "forwards didConnect /\ndidDisconnect / state changes\nto selectedPeripheral" --> TP
-    DETAIL -- "connect() / disconnect()\nturnOnLED() / turnOffLED()" --> TP
-    TP -- "ThingyDelegate callbacks\nthingyDidConnect / thingyDidDisconnect\nledStateChanged / buttonStateChanged" --> DETAIL
-    TP -- "connect / write / read /\nsetNotifyValue" --> CM
-    CM --> PERIPH
-    PERIPH <-. "BLE (GATT)" .-> THINGY
+    MAIN --> SCANV
+    SCANV --> ROWV
+    SCANV -- "navigationDestination(item:)" --> DETV
+    SCANV --> SCANVM
+    DETV --> DETVM
+    SCANVM -- "forwards didConnect / didFail /\ndidDisconnect / state changes" --> TP
+    DETVM -- "ThingyDelegate callbacks\nrepublished as observable state" --> TP
+    TP <-. "BLE (GATT)" .-> THINGY
 ```
 
 ### Connection lifecycle
 
 ```mermaid
 sequenceDiagram
-    participant D as ThingyViewController
+    participant D as ThingyDetailView / ThingyConnection
     participant P as ThingyPeripheral
-    participant S as Scanner (CBCentralManager delegate)
+    participant S as ScannerModel (central delegate)
     participant T as Thingy:52
 
-    D->>P: connect() (viewWillAppear)
+    D->>P: connect() (.onAppear)
     P->>T: centralManager.connect
     T-->>S: didConnect
     S->>P: forward didConnect
@@ -110,54 +107,62 @@ sequenceDiagram
     P->>T: read LED + Button initial values
     loop While connected
         T-->>P: Button notification / LED read
-        P->>D: buttonStateChanged / ledStateChanged
+        P->>D: buttonStateChanged / ledStateChanged → observable state
     end
-    D->>P: disconnect() (viewWillDisappear)
+    D->>P: disconnect() (.onDisappear)
     P->>T: cancelPeripheralConnection
-    T-->>S: didDisconnect
+    T-->>S: didDisconnect → forwarded, selection cleared
 ```
 
 Key design points:
 
-- **`ThingyPeripheral`** (`Models/ThingyPeripheral.swift`) hard-codes the Thingy:52 User
-  Interface service (`EF680300-9B35-4933-9B10-52FFA9740042`) with its LED (`…0301`, write) and
-  Button (`…0302`, notify) characteristics, and drives the full
-  connect → discover → subscribe → read pipeline. Peripheral equality is by
-  `CBPeripheral.identifier`, which the scanner uses to dedupe repeat advertisements into live
-  cell updates instead of duplicate rows.
-- **Single central-manager delegate**: the scanner owns the `CBCentralManager` and remains its
-  delegate for the app's lifetime, forwarding connection events to the user-selected
-  `ThingyPeripheral`. This avoids delegate hand-off races during screen transitions.
-- **`ThingyDelegate`** is class-bound with a weak reference, so the view controller ↔ peripheral
-  pair cannot form a retain cycle.
-- **Logging** uses `os.Logger` (subsystem = bundle identifier, categories `ThingyPeripheral` and
-  `Scanner`) at debug level — filter in Console.app or Xcode's console.
+- **`ThingyPeripheral`** hard-codes the Thingy:52 User Interface service
+  (`EF680300-9B35-4933-9B10-52FFA9740042`) with its LED (`…0301`, write) and Button (`…0302`,
+  notify) characteristics. Equality and hash are by `CBPeripheral.identifier`, which the scanner
+  uses to dedupe repeat advertisements into live row updates instead of duplicate rows.
+- **Single central-manager delegate**: `ScannerModel` owns the `CBCentralManager` (created lazily
+  so the permission prompt appears at first scan) and stays its delegate for the app's lifetime,
+  forwarding connection events to the selected peripheral. No delegate hand-off races.
+- **`ThingyControlling`** is the protocol seam between `ThingyConnection` and `ThingyPeripheral`,
+  making the connection state machine unit-testable with a mock (`CBPeripheral` cannot be
+  instantiated in tests).
+- **iOS 26 note**: the app intentionally uses the native Liquid Glass navigation bar with a
+  Nordic-blue tint. An opaque colored bar (the UIKit app's look) obscures SwiftUI's large title
+  on iOS 26.
+- **Logging** uses `os.Logger` (subsystem = bundle identifier) at debug level — filter in
+  Console.app or Xcode's console.
 
 ## Project Layout
 
 ```
 nRFThingy52/
-├── Models/ThingyPeripheral.swift        # BLE wrapper + ThingyDelegate protocol
-├── ViewsControllers/
-│   ├── RootViewController.swift         # nav controller, Nordic nav-bar styling
-│   ├── Scanner/                         # scan list screen + cell
-│   └── ThingyView/                      # LED/button detail screen
+├── ThingyApp.swift                      # @main SwiftUI entry
+├── Views/
+│   ├── ScannerView.swift                # scan list + empty state
+│   ├── ThingyRowView.swift              # name + RSSI icon row
+│   └── ThingyDetailView.swift           # LED/button detail screen
+├── Models/
+│   ├── ThingyPeripheral.swift           # CoreBluetooth state machine + ThingyDelegate
+│   ├── ScannerModel.swift               # central manager owner, discovery list, RSSIBucket
+│   └── ThingyConnection.swift           # per-device observable state + ThingyControlling
 ├── Utilities/
 │   ├── StringExtension.swift            # .localized helper
-│   ├── UIColorExtension.swift           # Nordic palette, hex + dynamic colors
+│   ├── UIColorExtension.swift           # Nordic palette (UIKit types, unit-tested)
+│   ├── ColorExtension.swift             # SwiftUI Color bridge
 │   └── <lang>.lproj/Localizable.strings # 16 locales
-├── Base.lproj/Main.storyboard           # both screens + empty-state view
+├── Base.lproj/LaunchScreen.storyboard   # launch screen (storyboards are fine here)
 └── Assets.xcassets                      # RSSI icons, app icon, etc.
-nRFThingy52Tests/                        # unit tests (color/hex/localization utilities)
+nRFThingy52Tests/                        # 21 unit tests (utilities + BLE models)
 nRFThingy52UITests/                      # UI test target (template)
 ```
 
 ## Testing
 
-Unit tests cover the utility layer (`UIColor` hex parsing and round-trip, dynamic light/dark
-color resolution, `String.localized` fallback). BLE logic requires a physical Thingy:52 —
-see `nRFThingy52BLEStatus.md` for the code-analysis history, the fixes applied, and the
-on-device verification checklist.
+21 unit tests: the utility layer (`UIColor` hex parsing/round-trip, dynamic colors,
+`String.localized`) and the BLE model layer (`RSSIBucket` boundaries, scanner helpers, and a
+mock-driven `ThingyConnection` state-machine suite). Live BLE behavior requires a physical
+Thingy:52 — see `nRFThingy52BLEStatus.md` for the fix history and the on-device verification
+checklist, and `SwiftUIMigrationPlan.md` for the UIKit → SwiftUI migration record.
 
 ## License
 

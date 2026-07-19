@@ -307,3 +307,39 @@ capsule behind the nav-bar indicator is suppressed via `hidesSharedBackground`.
    red disconnected state instead of hanging on "Scanning..." (`didFailToConnect` port, item 15).
 
 Re-run this checklist when a Thingy:52 is available and update this section with the results.
+
+## 10. SwiftUI Migration (2026-07-19)
+
+The app was migrated from UIKit/storyboards to SwiftUI on `main`, per `SwiftUIMigrationPlan.md`.
+The UIKit implementation is archived on branch `nRFThingy52UIKit`. Deployment target moved from
+iOS 14.5 to **iOS 17.0**.
+
+**What changed:**
+- `ThingyApp` (`@main`) + `ScannerView`/`ThingyRowView`/`ThingyDetailView` replaced the app/scene
+  delegates, `Main.storyboard` (and its 16 `Main.strings` files), and all four view controllers.
+- `ScannerModel` and `ThingyConnection` (`@MainActor @Observable`) replaced the view controllers'
+  BLE-facing logic. `ThingyPeripheral` carried over unchanged apart from the `ThingyControlling`
+  conformance (protocol seam for tests).
+- All section-4 fixes survived the migration: sole-central-delegate forwarding (incl.
+  `didFailToConnect`), 1 s row throttle, RSSI buckets (now the tested `RSSIBucket` enum),
+  lazy manager creation preserving permission-prompt timing, connect-on-appear /
+  disconnect-on-disappear lifecycle, optimistic LED write + read-back.
+- **iOS 26 finding:** an opaque nav-bar background (via `UINavigationBarAppearance` or
+  `.toolbarBackground`) paints over SwiftUI's large title on iOS 26 — verified by elimination on
+  the iPhone 17 Pro (26.3.1) simulator. The app therefore uses the native Liquid Glass bar with a
+  Nordic-blue tint instead of the UIKit app's opaque cyan bar. The old `hidesSharedBackground`
+  workaround was deleted with the UIKit layer.
+
+**Verified (SwiftUI build):**
+- Simulator (iPhone 17 Pro, iOS 26.3.1): scanner + empty state render correctly in light and dark
+  mode; large title and toolbar spinner behave; clean install works.
+- Device (hardy Pond, iPhone 13): install/launch, large title, spinner animating while scanning,
+  light/dark both fine (user-verified).
+- 21 unit tests pass (6 utility + 15 new model tests: RSSI boundaries, scanner helpers,
+  mock-driven `ThingyConnection` state machine).
+
+**Still pending:** the section-9 hardware checklist (items 1–7) against a physical Thingy:52 —
+all items re-apply unchanged to the SwiftUI build, plus one addition:
+
+8. Back-swipe cancellation: `.onDisappear` fires later than `viewWillDisappear` did — verify a
+   cancelled back-swipe followed by quick interaction doesn't race the reconnect logic.

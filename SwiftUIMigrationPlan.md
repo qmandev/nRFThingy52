@@ -3,6 +3,12 @@
 *Drafted 2026-07-19. UIKit implementation is archived on branch `nRFThingy52UIKit`; all migration
 work happens on `main`.*
 
+**Status (2026-07-19): phases 0–5 and 7 complete.** Phase 6 is complete for simulator (light/dark)
+and partial on device — the Thingy:52-dependent checklist (`nRFThingy52BLEStatus.md` §9) awaits
+hardware. Notable deviation from plan: the Nordic-blue opaque nav bar was dropped in favor of the
+native iOS 26 Liquid Glass bar + Nordic tint, because opaque bar backgrounds obscure SwiftUI's
+large title on iOS 26 (see status doc §10).
+
 ## 1. Goal & Scope
 
 Replace the UIKit/storyboard UI layer with SwiftUI while preserving the app's behavior exactly:
